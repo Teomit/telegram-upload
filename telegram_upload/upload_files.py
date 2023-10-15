@@ -77,13 +77,16 @@ def get_file_thumb(file):
 
 class UploadFilesBase:
     def __init__(self, client: 'TelegramManagerClient', files, thumbnail: Union[str, bool, None] = None,
-                 force_file: bool = False, caption: Union[str, None] = None):
+                 force_file: bool = False, caption: Union[str, None] = None,
+                 caption_folder_tag: bool = False, caption_from_txt: bool = False):
         self._iterator = None
         self.client = client
         self.files = files
         self.thumbnail = thumbnail
         self.force_file = force_file
         self.caption = caption
+        self.caption_folder_tag = caption_folder_tag
+        self.caption_from_txt = caption_from_txt
 
     def get_iterator(self):
         raise NotImplementedError
@@ -103,10 +106,18 @@ class RecursiveFiles(UploadFilesBase):
     def get_iterator(self):
         for file in self.files:
             if os.path.isdir(file):
-                yield from map(lambda file: file.path,
-                               filter(lambda x: not x.is_dir(), scantree(file, True)))
+                if self.caption_from_txt:
+                    yield from map(lambda file: file.path,
+                                   filter(lambda x: not (x.is_dir() or x.name.endswith('.txt')), scantree(file, True)))
+                else:
+                    yield from map(lambda file: file.path,
+                                   filter(lambda x: not x.is_dir(), scantree(file, True)))
             else:
-                yield file
+                if self.caption_from_txt:
+                    if os.path.splitext(file)[1] != '.txt':
+                        yield file
+                else:
+                    yield file
 
 
 class NoDirectoriesFiles(UploadFilesBase):
@@ -127,7 +138,8 @@ class LargeFilesBase(UploadFilesBase):
                 yield self.process_normal_file(file)
 
     def process_normal_file(self, file: str) -> 'File':
-        return File(self.client, file, force_file=self.force_file, thumbnail=self.thumbnail, caption=self.caption)
+        return File(self.client, file, force_file=self.force_file, thumbnail=self.thumbnail, caption=self.caption,
+                    caption_folder_tag=self.caption_folder_tag, caption_from_txt=self.caption_from_txt)
 
     def process_large_file(self, file):
         raise NotImplementedError
@@ -142,13 +154,16 @@ class File(FileIO):
     force_file = False
 
     def __init__(self, client: 'TelegramManagerClient', path: str, force_file: Union[bool, None] = None,
-                 thumbnail: Union[str, bool, None] = None, caption: Union[str, None] = None):
+                 thumbnail: Union[str, bool, None] = None, caption: Union[str, None] = None,
+                 caption_folder_tag: Union[bool, None] = None, caption_from_txt: Union[bool, None] = None):
         super().__init__(path)
         self.client = client
         self.path = path
         self.force_file = self.force_file if force_file is None else force_file
         self._thumbnail = thumbnail
         self._caption = caption
+        self.caption_folder_tag = caption_folder_tag
+        self.caption_from_txt = caption_from_txt
 
     @property
     def file_name(self):
@@ -178,6 +193,26 @@ class File(FileIO):
         else:
             caption = self.short_name
         return truncate(caption, self.client.max_caption_length)
+
+    @property
+    def file_caption_folder_tag(self) -> str:
+        if self.caption_folder_tag:
+            folder_name = os.path.basename(os.path.dirname(self.path))
+            return '\n' + "#" + f"{folder_name}"
+        else:
+            return ''
+
+    @property
+    def file_caption_from_txt_file(self) -> str:
+        if self.caption_from_txt:
+            txt_file_path = self.path[:-3] + "txt"
+            if os.path.exists(txt_file_path):
+                with open(txt_file_path, 'r', encoding='utf-8') as file:
+                    return '\n' + file.read()
+            else:
+                return ''
+        else:
+            return ''
 
     def get_thumbnail(self):
         thumb = None

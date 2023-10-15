@@ -142,8 +142,13 @@ class MutuallyExclusiveOption(click.Option):
               help='Use interactive mode.')
 @click.option('--sort', is_flag=True,
               help='Sort files by name before upload it. Install the natsort Python package for natural sorting.')
+@click.option('-cfd', '--caption-folder-tag', is_flag=True, help='Add folder name to upload message as tag.')
+@click.option('-cft', '--caption-from-txt', is_flag=True, help='Add text from the same name txt file.')
+@click.option('-sam', '--send-as-media', is_flag=True, help='Force send as a media file.')
+@click.option('-rt', '--reply-to', default=None, help='The ID of the message to be reply to.')
 def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, directories, large_files, caption,
-           no_thumbnail, thumbnail_file, proxy, album, interactive, sort):
+           no_thumbnail, thumbnail_file, proxy, album, interactive, sort,
+           caption_folder_tag, caption_from_txt, send_as_media, reply_to):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 2 GiB for free users and 4 GiB for premium accounts.
     By default, they will be saved in your saved messages.
@@ -163,8 +168,15 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
         to = async_to_sync(interactive_select_dialog(client))
     elif to is None:
         to = 'me'
+    try:
+        to = int(to)
+    except ValueError:
+        pass
+    if not reply_to is None:
+        reply_to = int(reply_to)
     files = filter(lambda file: is_valid_file(file, lambda message: click.echo(message, err=True)), files)
-    files = DIRECTORY_MODES[directories](client, files)
+    files = DIRECTORY_MODES[directories](client, files,
+                                         None, force_file, None, caption_folder_tag, caption_from_txt)
     if directories == 'fail':
         # Validate now
         files = list(files)
@@ -175,7 +187,8 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     else:
         thumbnail = None
     files_cls = LARGE_FILE_MODES[large_files]
-    files = files_cls(client, files, caption=caption, thumbnail=thumbnail, force_file=force_file)
+    files = files_cls(client, files, caption=caption, thumbnail=thumbnail, force_file=force_file,
+                      caption_folder_tag=caption_folder_tag, caption_from_txt=caption_from_txt)
     if large_files == 'fail':
         # Validate now
         files = list(files)
@@ -188,7 +201,8 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     if album:
         client.send_files_as_album(to, files, delete_on_success, print_file_id, forward)
     else:
-        client.send_files(to, files, delete_on_success, print_file_id, forward)
+        client.send_files(to, files, delete_on_success, print_file_id, forward
+                          , send_as_media, reply_to)
 
 
 @click.command()
