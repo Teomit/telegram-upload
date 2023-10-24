@@ -199,10 +199,11 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
     elif sort:
         files = sorted(files, key=lambda x: x.name)
     if album:
-        client.send_files_as_album(to, files, delete_on_success, print_file_id, forward)
+        client.send_files_as_album(to, files, delete_on_success, print_file_id, forward,
+                          reply_to)
     else:
-        client.send_files(to, files, delete_on_success, print_file_id, forward
-                          , send_as_media, reply_to)
+        client.send_files(to, files, delete_on_success, print_file_id, forward,
+                          send_as_media, reply_to)
 
 
 @click.command()

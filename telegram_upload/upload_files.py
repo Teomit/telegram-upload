@@ -1,11 +1,14 @@
 import datetime
 import math
 import os
+import tempfile
 
 
 import mimetypes
 from io import FileIO, SEEK_SET
 from typing import Union, TYPE_CHECKING
+
+from PIL import Image
 
 import click
 from hachoir.metadata.metadata import RootMetadata
@@ -221,6 +224,13 @@ class File(FileIO):
                 thumb = get_file_thumb(self.path)
             except ThumbError as e:
                 click.echo('{}'.format(e), err=True)
+            if thumb is None or not os.path.exists(thumb):
+                image = Image.new("RGB", (320, 320), color="black")
+                with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as tmpfile:
+                    temp_file_path = tmpfile.name
+                    image.save(temp_file_path, "PNG")
+                image.close()
+                thumb = temp_file_path
         elif self.is_custom_thumbnail:
             if not isinstance(self._thumbnail, str):
                 raise TypeError('Invalid type for thumbnail: {}'.format(type(self._thumbnail)))

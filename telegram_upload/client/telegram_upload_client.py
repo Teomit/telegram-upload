@@ -36,10 +36,10 @@ class TelegramUploadClient(TelegramClient):
         for destination in destinations:
             self.forward_messages(destination, [message])
 
-    async def _send_album_media(self, entity, media):
+    async def _send_album_media(self, entity, media, reply_to=None):
         entity = await self.get_input_entity(entity)
         request = functions.messages.SendMultiMediaRequest(
-            entity, multi_media=media, silent=None, schedule_date=None, clear_draft=None
+            entity, multi_media=media, silent=None, schedule_date=None, clear_draft=None, reply_to_msg_id=reply_to
         )
         result = await self(request)
 
@@ -47,10 +47,11 @@ class TelegramUploadClient(TelegramClient):
         return self._get_response_message(random_ids, result, entity)
 
     def send_files_as_album(self, entity, files, delete_on_success=False, print_file_id=False,
-                            forward=()):
+                            forward=(),
+                            reply_to=None):
         for files_group in grouper(ALBUM_FILES, files):
-            media = self.send_files(entity, files_group, delete_on_success, print_file_id, forward, send_as_media=True)
-            async_to_sync(self._send_album_media(entity, media))
+            media = self.send_files(entity, files_group, delete_on_success, print_file_id, forward, send_as_media=True, reply_to=reply_to)
+            async_to_sync(self._send_album_media(entity, media, reply_to=reply_to))
 
     def _send_file_message(self, entity, file, thumb, progress, reply_to):
         message = self.send_file(entity, file, thumb=thumb,
@@ -63,7 +64,7 @@ class TelegramUploadClient(TelegramClient):
                     message.media.document.size, file.file_size))
         return message
 
-    async def _send_media(self, entity, file: File, progress):
+    async def _send_media(self, entity, file: File, progress, reply_to=None):
         entity = await self.get_input_entity(entity)
         supports_streaming = False  # TODO
         fh, fm, _ = await self._file_to_media(
@@ -98,9 +99,9 @@ class TelegramUploadClient(TelegramClient):
             try:
                 # TODO: remove distinction?
                 if send_as_media:
-                    message = async_to_sync(self._send_media(entity, file, progress))
+                    message = async_to_sync(self._send_media(entity, file, progress, reply_to))
                 else:
-                    message = self._send_file_message(entity, file, thumb, progress)
+                    message = self._send_file_message(entity, file, thumb, progress, reply_to)
             finally:
                 bar.render_finish()
         except FloodWaitError as e:
