@@ -50,13 +50,6 @@ def get_file_mime(file: str) -> str:
     return (mimetypes.guess_type(file)[0] or '').split('/')[0]
 
 
-def metadata_has(metadata: RootMetadata, key: str):
-    try:
-        return metadata.has(key)
-    except ValueError:
-        return False
-
-
 def get_file_attributes(file: str) -> List:
     """
     Get Telegram document attributes for a file.
