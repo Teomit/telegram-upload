@@ -5,7 +5,7 @@ import os
 
 import mimetypes
 from io import FileIO, SEEK_SET
-from typing import Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING, List, Optional
 
 import click
 from hachoir.metadata.metadata import RootMetadata
@@ -13,7 +13,9 @@ from hachoir.metadata.video import MP4Metadata
 from telethon.tl.types import DocumentAttributeVideo, DocumentAttributeFilename
 
 from telegram_upload.caption_formatter import CaptionFormatter, FilePath
+from telegram_upload.constants import SPLIT_FILE_PART_NUMBER_PADDING
 from telegram_upload.exceptions import TelegramInvalidFile, ThumbError
+from telegram_upload.metadata_helpers import get_video_metadata_stream, metadata_has
 from telegram_upload.utils import scantree, truncate
 from telegram_upload.video import get_video_thumb, video_metadata
 
@@ -55,7 +57,7 @@ def metadata_has(metadata: RootMetadata, key: str):
         return False
 
 
-def get_file_attributes(file: str) -> list:
+def get_file_attributes(file: str) -> List:
     """
     Get Telegram document attributes for a file.
 
@@ -65,8 +67,6 @@ def get_file_attributes(file: str) -> list:
     Returns:
         List of document attributes (e.g., DocumentAttributeVideo)
     """
-    from telegram_upload.metadata_helpers import get_video_metadata_stream, metadata_has
-
     attrs = []
     mime = get_file_mime(file)
     if mime == 'video':
@@ -85,7 +85,7 @@ def get_file_attributes(file: str) -> list:
     return attrs
 
 
-def get_file_thumb(file: str) -> Union[str, None]:
+def get_file_thumb(file: str) -> Optional[str]:
     """
     Get thumbnail path for a file.
 
@@ -269,8 +269,6 @@ class SplitFile(File, FileIO):
 class SplitFiles(LargeFilesBase):
     def process_large_file(self, file):
         file_name = os.path.basename(file)
-        from telegram_upload.constants import SPLIT_FILE_PART_NUMBER_PADDING
-
         total_size = os.path.getsize(file)
         parts = math.ceil(total_size / self.client.max_file_size)
         zfill = SPLIT_FILE_PART_NUMBER_PADDING

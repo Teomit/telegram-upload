@@ -12,6 +12,8 @@ from typing import Any, Sequence, Mapping, Tuple, Optional
 
 import click
 
+from telegram_upload.constants import DURATION_SEPARATOR, DURATION_LAST_SEPARATOR
+from telegram_upload.metadata_helpers import get_video_metadata_stream
 from telegram_upload.video import video_metadata
 
 logger = logging.getLogger(__name__)
@@ -75,8 +77,6 @@ class Duration:
                     duration.append(f"{i} {words[x]}")
                 elif i > 1:
                     duration.append(f"{i} {words[x]}s")
-
-            from telegram_upload.constants import DURATION_SEPARATOR, DURATION_LAST_SEPARATOR
 
             if len(duration) == 1:
                 return duration[0]
@@ -144,7 +144,6 @@ class FileMedia:
     @cached_property
     def video_metadata(self) -> Any:
         """Get video-specific metadata stream, handling MKV containers."""
-        from telegram_upload.metadata_helpers import get_video_metadata_stream
         return get_video_metadata_stream(self.metadata)
 
     @property

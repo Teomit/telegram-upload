@@ -50,15 +50,16 @@ def async_to_sync(coro):
     """
     try:
         # Check if there's already a running event loop
-        loop = asyncio.get_running_loop()
+        asyncio.get_running_loop()
+    except RuntimeError:
+        # No running loop, safe to use asyncio.run()
+        return asyncio.run(coro)
+    else:
         # If we get here, we're already in an async context
         raise RuntimeError(
             "async_to_sync() cannot be called from a running event loop. "
             "Use 'await' instead or run in a separate thread."
         )
-    except RuntimeError:
-        # No running loop, safe to use asyncio.run()
-        return asyncio.run(coro)
 
 
 async def aislice(iterator, limit):
