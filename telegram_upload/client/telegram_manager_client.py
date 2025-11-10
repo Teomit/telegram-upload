@@ -1,9 +1,9 @@
 import getpass
 import json
+import logging
 import os
 import re
 import sys
-from distutils.version import StrictVersion
 from typing import Union
 from urllib.parse import urlparse
 
@@ -16,9 +16,19 @@ from telethon.version import __version__ as telethon_version
 from telegram_upload.client.telegram_download_client import TelegramDownloadClient
 from telegram_upload.client.telegram_upload_client import TelegramUploadClient
 from telegram_upload.config import SESSION_FILE
-from telegram_upload.exceptions import TelegramProxyError, InvalidApiFileError
+from telegram_upload.exceptions import TelegramProxyError, InvalidApiFileError, TelegramUploadError
 
-if StrictVersion(telethon_version) >= StrictVersion('1.0'):
+logger = logging.getLogger(__name__)
+
+try:
+    from packaging.version import Version
+except ImportError:
+    # Fallback for older environments, but log warning
+    logger.warning("packaging module not found, using deprecated distutils")
+    from distutils.version import StrictVersion as Version
+
+# All current telethon versions are >= 1.0, but keeping check for compatibility
+if Version(telethon_version) >= Version('1.0'):
     import telethon.sync  # noqa
 
 
@@ -84,9 +94,41 @@ def parse_proxy_string(proxy: Union[str, None]):
 
 class TelegramManagerClient(TelegramUploadClient, TelegramDownloadClient):
     def __init__(self, config_file, proxy=None, **kwargs):
-        with open(config_file) as f:
-            config = json.load(f)
         self.config_file = config_file
+
+        # Load and validate configuration file with proper error handling
+        try:
+            with open(config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+        except FileNotFoundError:
+            raise TelegramUploadError(
+                f"Configuration file not found: {config_file}\n"
+                f"Please create a config file or run telegram-upload with --config option."
+            )
+        except json.JSONDecodeError as e:
+            raise TelegramUploadError(
+                f"Invalid JSON in configuration file {config_file}:\n"
+                f"  Line {e.lineno}, Column {e.colno}: {e.msg}\n"
+                f"Please check your JSON syntax."
+            )
+        except PermissionError:
+            raise TelegramUploadError(
+                f"Permission denied when reading configuration file: {config_file}"
+            )
+        except OSError as e:
+            raise TelegramUploadError(
+                f"Failed to read configuration file {config_file}: {e}"
+            )
+
+        # Validate required configuration keys
+        if 'api_id' not in config:
+            raise InvalidApiFileError(
+                f"Missing 'api_id' in configuration file: {config_file}"
+            )
+        if 'api_hash' not in config:
+            raise InvalidApiFileError(
+                f"Missing 'api_hash' in configuration file: {config_file}"
+            )
         proxy = proxy if proxy is not None else get_proxy_environment_variable()
         proxy = parse_proxy_string(proxy)
         if proxy and proxy[0] == 'mtproxy':

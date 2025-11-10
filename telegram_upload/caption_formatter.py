@@ -1,6 +1,7 @@
 import _string
 import datetime
 import hashlib
+import logging
 import mimetypes
 import os
 import sys
@@ -12,6 +13,8 @@ from typing import Any, Sequence, Mapping, Tuple, Optional
 import click
 
 from telegram_upload.video import video_metadata
+
+logger = logging.getLogger(__name__)
 
 try:
     from typing import LiteralString
@@ -332,7 +335,9 @@ class CaptionFormatter(Formatter):
             if not isinstance(obj, VALID_TYPES + (WindowsFilePath, PosixFilePath, FilePath, FileSize, Duration)):
                 raise TypeError(f'Invalid type for {field_name}: {type(obj)}')
             return obj, first
-        except Exception:
+        except (TypeError, AttributeError, KeyError, ValueError) as e:
+            # Log the specific error for debugging, but return placeholder
+            logger.debug(f'Failed to parse field "{field_name}": {type(e).__name__}: {e}')
             first, rest = _string.formatter_field_name_split(field_name)
             return '{' + field_name + '}', first
 

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """Console script for telegram-upload."""
+import logging
 import os
 
 import click
@@ -11,6 +12,7 @@ from telegram_upload.client import TelegramManagerClient, get_message_file_attri
 from telegram_upload.config import default_config, CONFIG_FILE
 from telegram_upload.download_files import KeepDownloadSplitFiles, JoinDownloadSplitFiles
 from telegram_upload.exceptions import catch
+from telegram_upload.logging_config import setup_logging
 from telegram_upload.upload_files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
 from telegram_upload.utils import async_to_sync, amap, sync_to_async_iterator
 
@@ -142,12 +144,19 @@ class MutuallyExclusiveOption(click.Option):
               help='Use interactive mode.')
 @click.option('--sort', is_flag=True,
               help='Sort files by name before upload it. Install the natsort Python package for natural sorting.')
+@click.option('--log-level', default='INFO', type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+              case_sensitive=False), help='Set logging level. Default: INFO')
 def upload(files, to, config, delete_on_success, print_file_id, force_file, forward, directories, large_files, caption,
-           no_thumbnail, thumbnail_file, proxy, album, interactive, sort):
+           no_thumbnail, thumbnail_file, proxy, album, interactive, sort, log_level):
     """Upload one or more files to Telegram using your personal account.
     The maximum file size is 2 GiB for free users and 4 GiB for premium accounts.
     By default, they will be saved in your saved messages.
     """
+    # Setup logging
+    setup_logging(level=getattr(logging, log_level.upper()))
+    logger = logging.getLogger(__name__)
+    logger.debug(f'Starting upload with files: {files}')
+
     client = TelegramManagerClient(config or default_config(), proxy=proxy)
     client.start()
     if interactive and not files:
@@ -204,12 +213,19 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
               help='Defines how to download large files split in Telegram. By default the files are not merged.')
 @click.option('-i', '--interactive', is_flag=True,
               help='Use interactive mode.')
-def download(from_, config, delete_on_success, proxy, split_files, interactive):
+@click.option('--log-level', default='INFO', type=click.Choice(['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'],
+              case_sensitive=False), help='Set logging level. Default: INFO')
+def download(from_, config, delete_on_success, proxy, split_files, interactive, log_level):
     """Download all the latest messages that are files in a chat, by default download
     from "saved messages". It is recommended to forward the files to download to
     "saved messages" and use parameter ``--delete-on-success``. Forwarded messages will
     be removed from the chat after downloading, such as a download queue.
     """
+    # Setup logging
+    setup_logging(level=getattr(logging, log_level.upper()))
+    logger = logging.getLogger(__name__)
+    logger.debug(f'Starting download from: {from_}')
+
     client = TelegramManagerClient(config or default_config(), proxy=proxy)
     client.start()
     if not interactive and not from_:
