@@ -291,6 +291,8 @@ class TelegramUploadClient(TelegramClient):
             self._log[__name__].info('Uploading file of %d bytes in %d chunks of %d',
                                     file_size, part_count, part_size)
 
+            # Collect tasks to wait for specific tasks instead of all tasks in event loop
+            upload_tasks = []
             pos = 0
             for part_index in range(part_count):
                 # Read the file by in chunks of size part_size
@@ -329,14 +331,15 @@ class TelegramUploadClient(TelegramClient):
                     request = functions.upload.SaveFilePartRequest(
                         file_id, part_index, part)
                 await self.upload_semaphore.acquire()
-                self.loop.create_task(
-                    self._send_file_part(request, part_index, part_count, pos, file_size, progress_callback),
-                    name=f"telegram-upload-file-{part_index}"
+                task = self.loop.create_task(
+                    self._send_file_part(request, part_index, part_count, pos, file_size, progress_callback)
                 )
-            # Wait for all tasks to finish
-            await asyncio.wait([
-                task for task in asyncio.all_tasks() if task.get_name().startswith(f"telegram-upload-file-")
-            ])
+                upload_tasks.append(task)
+
+            # Wait for all upload tasks to complete
+            # Using gather instead of wait to properly handle exceptions and avoid capturing unrelated tasks
+            # If any task fails, gather will raise the exception after all tasks complete
+            await asyncio.gather(*upload_tasks)
         if is_big:
             return types.InputFileBig(file_id, part_count, file_name)
         else:
