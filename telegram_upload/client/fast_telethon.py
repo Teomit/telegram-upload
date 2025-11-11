@@ -97,8 +97,10 @@ class ParallelTransferrer:
 
         # Export auth for other connections
         if self.max_workers > 1:
+            # Get DC ID from session
+            dc_id = self.client.session.dc_id
             exported_auth = await self.client(functions.auth.ExportAuthorizationRequest(
-                dc_id=await self.client.get_dc_id()
+                dc_id=dc_id
             ))
             self._auth_key_hash = exported_auth.bytes
 
@@ -106,7 +108,7 @@ class ParallelTransferrer:
             # For now, we'll use a simplified approach - just use the main client
             # Full implementation would create new TelegramClient instances
             # and import authorization
-            logger.debug(f'Using simplified approach with main client')
+            logger.debug(f'Using simplified approach with main client for DC {dc_id}')
 
     async def upload_part(
         self,
@@ -254,12 +256,15 @@ async def upload_file_fast(
                     hash_md5.update(part)
 
                 # Create upload task
+                # Note: Progress is reported after reading, not after upload completes
+                # This gives approximate progress. For exact progress, would need to
+                # track completion of each upload task separately.
                 task = asyncio.create_task(
                     transferrer.upload_part(part_index, part, part_count, file_id, is_big)
                 )
                 upload_tasks.append(task)
 
-                # Report progress
+                # Report progress after reading part (before upload completes)
                 if progress_callback:
                     await helpers._maybe_await(progress_callback(pos, file_size))
 
