@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import logging
 import os
 import time
 from typing import Iterable, Optional
@@ -15,6 +16,8 @@ from telegram_upload.client.progress_bar import get_progress_bar
 from telegram_upload.exceptions import TelegramUploadDataLoss, MissingFileError
 from telegram_upload.upload_files import File
 from telegram_upload.utils import grouper, async_to_sync, get_environment_integer
+
+logger = logging.getLogger(__name__)
 
 PARALLEL_UPLOAD_BLOCKS = get_environment_integer('TELEGRAM_UPLOAD_PARALLEL_UPLOAD_BLOCKS', 4)
 ALBUM_FILES = 10
@@ -173,7 +176,34 @@ class TelegramUploadClient(TelegramClient):
             iv: bytes = None,
             progress_callback: 'hints.ProgressCallback' = None) -> 'types.TypeInputFile':
         """
-        Uploads a file to Telegram's servers, without sending it.
+        Upload a file to Telegram's servers.
+
+        This method supports both standard and FastTelethon upload modes.
+        When fast_telethon_enabled is True, uses multiple parallel connections
+        for significantly faster uploads.
+        """
+        # Check if FastTelethon mode is enabled
+        if hasattr(self, 'fast_telethon_enabled') and self.fast_telethon_enabled:
+            try:
+                from telegram_upload.client.fast_telethon import upload_file_fast
+                logger.info('Using FastTelethon upload mode')
+                return await upload_file_fast(
+                    self, file,
+                    part_size_kb=part_size_kb,
+                    file_size=file_size,
+                    file_name=file_name,
+                    use_cache=use_cache,
+                    key=key,
+                    iv=iv,
+                    progress_callback=progress_callback
+                )
+            except Exception as e:
+                logger.warning(f'FastTelethon upload failed: {e}, falling back to standard upload')
+                # Fall through to standard upload
+
+        # Standard upload mode
+        """
+        Uploads a file to Telegram's servers, without sending it (standard mode).
 
         .. note::
 
