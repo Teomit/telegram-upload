@@ -1,8 +1,11 @@
-telethon
-click>=6.0
-cryptg
-hachoir
+# Core dependencies with version constraints to prevent breaking changes
+# Issue #215 demonstrated the importance of version pinning
+telethon>=1.24.0,<2.0.0
+click>=8.0.0,<9.0.0
+cryptg>=0.4.0,<1.0.0
+hachoir>=3.0.0,<4.0.0
 scandir; python_version<'3.6'
-prompt_toolkit
-pysocks
-more-itertools
+prompt_toolkit>=3.0.0,<4.0.0
+pysocks>=1.7.1,<2.0.0
+more-itertools>=8.0.0,<10.0.0
+packaging>=21.0  # Replaces deprecated distutils (removed in Python 3.12)

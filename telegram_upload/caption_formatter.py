@@ -1,6 +1,7 @@
 import _string
 import datetime
 import hashlib
+import logging
 import mimetypes
 import os
 import sys
@@ -11,7 +12,11 @@ from typing import Any, Sequence, Mapping, Tuple, Optional
 
 import click
 
+from telegram_upload.constants import DURATION_SEPARATOR, DURATION_LAST_SEPARATOR
+from telegram_upload.metadata_helpers import get_video_metadata_stream
 from telegram_upload.video import video_metadata
+
+logger = logging.getLogger(__name__)
 
 try:
     from typing import LiteralString
@@ -76,9 +81,9 @@ class Duration:
             if len(duration) == 1:
                 return duration[0]
             elif len(duration) == 2:
-                return f"{duration[0]} and {duration[1]}"
+                return f"{duration[0]}{DURATION_LAST_SEPARATOR}{duration[1]}"
             else:
-                return ", ".join(duration[:-1]) + " and " + duration[-1]
+                return DURATION_SEPARATOR.join(duration[:-1]) + DURATION_LAST_SEPARATOR + duration[-1]
 
     def __int__(self) -> int:
         return self.seconds
@@ -138,14 +143,8 @@ class FileMedia:
 
     @cached_property
     def video_metadata(self) -> Any:
-        metadata = self.metadata
-        meta_groups = None
-        if hasattr(metadata, '_MultipleMetadata__groups'):
-            # Is mkv
-            meta_groups = metadata._MultipleMetadata__groups
-        if metadata is not None and not metadata.has('width') and meta_groups:
-            return meta_groups[next(filter(lambda x: x.startswith('video'), meta_groups._key_list))]
-        return metadata
+        """Get video-specific metadata stream, handling MKV containers."""
+        return get_video_metadata_stream(self.metadata)
 
     @property
     def duration(self) -> Optional[Duration]:
@@ -332,7 +331,9 @@ class CaptionFormatter(Formatter):
             if not isinstance(obj, VALID_TYPES + (WindowsFilePath, PosixFilePath, FilePath, FileSize, Duration)):
                 raise TypeError(f'Invalid type for {field_name}: {type(obj)}')
             return obj, first
-        except Exception:
+        except (TypeError, AttributeError, KeyError, ValueError) as e:
+            # Log the specific error for debugging, but return placeholder
+            logger.debug(f'Failed to parse field "{field_name}": {type(e).__name__}: {e}')
             first, rest = _string.formatter_field_name_split(field_name)
             return '{' + field_name + '}', first
 

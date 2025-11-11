@@ -67,7 +67,7 @@ class TelegramUploadClient(TelegramClient):
         entity = await self.get_input_entity(entity)
         supports_streaming = False  # TODO
         fh, fm, _ = await self._file_to_media(
-            file, supports_streaming=file, progress_callback=progress)
+            file, supports_streaming=supports_streaming, progress_callback=progress)
         if isinstance(fm, types.InputMediaUploadedPhoto):
             r = await self(functions.messages.UploadMediaRequest(
                 entity, media=fm
@@ -122,22 +122,41 @@ class TelegramUploadClient(TelegramClient):
         for file in files:
             has_files = True
             thumb = file.get_thumbnail()
+            message = None
+            upload_successful = False
+
             try:
                 message = self.send_one_file(entity, file, send_as_media, thumb=thumb)
+                # Only mark as successful if we got a valid message
+                upload_successful = message is not None
             finally:
+                # Clean up thumbnail only after upload attempt (success or failure)
                 if thumb and not file.is_custom_thumbnail and os.path.lexists(thumb):
-                    os.remove(thumb)
-            if message is None:
+                    try:
+                        os.remove(thumb)
+                    except OSError as e:
+                        click.echo('Warning: Failed to delete thumbnail "{}": {}'.format(thumb, e), err=True)
+
+            if not upload_successful:
                 click.echo('Failed to upload file "{}"'.format(file.file_name), err=True)
-            if message and print_file_id:
+                continue
+
+            # At this point, upload was successful
+            if print_file_id:
                 click.echo('Uploaded successfully "{}" (file_id {})'.format(file.file_name,
                                                                             pack_bot_file_id(message.media)))
-            if message and delete_on_success:
+
+            # Only delete original file if upload was confirmed successful
+            if delete_on_success:
                 click.echo('Deleting "{}"'.format(file))
-                os.remove(file.path)
-            if message:
-                self.forward_to(message, forward)
-                messages.append(message)
+                try:
+                    os.remove(file.path)
+                except OSError as e:
+                    click.echo('Warning: Failed to delete file "{}": {}'.format(file.path, e), err=True)
+
+            self.forward_to(message, forward)
+            messages.append(message)
+
         if not has_files:
             raise MissingFileError('Files do not exist.')
         return messages

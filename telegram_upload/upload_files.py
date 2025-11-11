@@ -5,7 +5,7 @@ import os
 
 import mimetypes
 from io import FileIO, SEEK_SET
-from typing import Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING, List, Optional
 
 import click
 from hachoir.metadata.metadata import RootMetadata
@@ -13,7 +13,9 @@ from hachoir.metadata.video import MP4Metadata
 from telethon.tl.types import DocumentAttributeVideo, DocumentAttributeFilename
 
 from telegram_upload.caption_formatter import CaptionFormatter, FilePath
+from telegram_upload.constants import SPLIT_FILE_PART_NUMBER_PADDING
 from telegram_upload.exceptions import TelegramInvalidFile, ThumbError
+from telegram_upload.metadata_helpers import get_video_metadata_stream, metadata_has
 from telegram_upload.utils import scantree, truncate
 from telegram_upload.video import get_video_thumb, video_metadata
 
@@ -35,29 +37,35 @@ def is_valid_file(file, error_logger=None):
     return error_message is None
 
 
-def get_file_mime(file):
-    return (mimetypes.guess_type(file)[0] or ('')).split('/')[0]
+def get_file_mime(file: str) -> str:
+    """
+    Get MIME type category for a file.
+
+    Args:
+        file: Path to the file
+
+    Returns:
+        MIME type category (e.g., 'video', 'image', 'audio') or empty string
+    """
+    return (mimetypes.guess_type(file)[0] or '').split('/')[0]
 
 
-def metadata_has(metadata: RootMetadata, key: str):
-    try:
-        return metadata.has(key)
-    except ValueError:
-        return False
+def get_file_attributes(file: str) -> List:
+    """
+    Get Telegram document attributes for a file.
 
+    Args:
+        file: Path to the file
 
-def get_file_attributes(file):
+    Returns:
+        List of document attributes (e.g., DocumentAttributeVideo)
+    """
     attrs = []
     mime = get_file_mime(file)
     if mime == 'video':
         metadata = video_metadata(file)
-        video_meta = metadata
-        meta_groups = None
-        if hasattr(metadata, '_MultipleMetadata__groups'):
-            # Is mkv
-            meta_groups = metadata._MultipleMetadata__groups
-        if metadata is not None and not metadata.has('width') and meta_groups:
-            video_meta = meta_groups[next(filter(lambda x: x.startswith('video'), meta_groups._key_list))]
+        # Use helper function to safely extract video stream (handles MKV files)
+        video_meta = get_video_metadata_stream(metadata)
         if metadata is not None:
             supports_streaming = isinstance(video_meta, MP4Metadata)
             attrs.append(DocumentAttributeVideo(
@@ -70,9 +78,19 @@ def get_file_attributes(file):
     return attrs
 
 
-def get_file_thumb(file):
+def get_file_thumb(file: str) -> Optional[str]:
+    """
+    Get thumbnail path for a file.
+
+    Args:
+        file: Path to the file
+
+    Returns:
+        Path to the thumbnail file, or None if not applicable
+    """
     if get_file_mime(file) == 'video':
         return get_video_thumb(file)
+    return None
 
 
 class UploadFilesBase:
@@ -246,7 +264,7 @@ class SplitFiles(LargeFilesBase):
         file_name = os.path.basename(file)
         total_size = os.path.getsize(file)
         parts = math.ceil(total_size / self.client.max_file_size)
-        zfill = int(math.log10(10)) + 1
+        zfill = SPLIT_FILE_PART_NUMBER_PADDING
         for part in range(parts):
             size = total_size - (part * self.client.max_file_size) if part >= parts - 1 else self.client.max_file_size
             splitted_file = SplitFile(self.client, file, size, '{}.{}'.format(file_name, str(part).zfill(zfill)))

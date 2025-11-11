@@ -41,11 +41,25 @@ def scantree(path, follow_symlinks=False):
 
 
 def async_to_sync(coro):
-    loop = asyncio.get_event_loop()
-    if loop.is_running():
-        return coro
+    """
+    Convert an async coroutine to sync execution.
+
+    If an event loop is already running, this will raise a RuntimeError.
+    For proper handling of nested event loops, consider using asyncio.run()
+    or running in a separate thread.
+    """
+    try:
+        # Check if there's already a running event loop
+        asyncio.get_running_loop()
+    except RuntimeError:
+        # No running loop, safe to use asyncio.run()
+        return asyncio.run(coro)
     else:
-        return loop.run_until_complete(coro)
+        # If we get here, we're already in an async context
+        raise RuntimeError(
+            "async_to_sync() cannot be called from a running event loop. "
+            "Use 'await' instead or run in a separate thread."
+        )
 
 
 async def aislice(iterator, limit):
@@ -69,9 +83,26 @@ async def sync_to_async_iterator(iterator):
         yield value
 
 
-def get_environment_integer(environment_name: str, default_value: int):
-    """Get an integer from an environment variable."""
-    value = os.environ.get(environment_name, default_value)
-    if isinstance(value, int) or value.isdigit():
+def get_environment_integer(environment_name: str, default_value: int) -> int:
+    """Get an integer from an environment variable.
+
+    Args:
+        environment_name: Name of the environment variable
+        default_value: Default value if the environment variable is not set
+
+    Returns:
+        Integer value from environment or default
+
+    Raises:
+        TelegramEnvironmentError: If the value cannot be converted to integer
+    """
+    value = os.environ.get(environment_name)
+    if value is None:
+        return default_value
+
+    try:
         return int(value)
-    raise TelegramEnvironmentError(f"Environment variable {environment_name} must be an integer")
+    except ValueError:
+        raise TelegramEnvironmentError(
+            f"Environment variable {environment_name} must be an integer, got: '{value}'"
+        )
