@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, mock_open, patch
 import socks
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 
-from telegram_upload.client import TelegramManagerClient
-from telegram_upload.client.telegram_manager_client import (
+from telegram_upload._backend import TelegramManagerClient
+from telegram_upload._backend._telethon._manager import (
     BOT_USER_MAX_FILE_SIZE,
     PREMIUM_USER_MAX_CAPTION_LENGTH,
     PREMIUM_USER_MAX_FILE_SIZE,
@@ -61,7 +61,7 @@ class TestParseProxyString(unittest.TestCase):
 
 class TestTelegramManagerClient(unittest.TestCase):
     @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
-    @patch('telegram_upload.client.telegram_manager_client.TelegramUploadClient.__init__')
+    @patch('telegram_upload._backend._telethon._manager.TelegramUploadClient.__init__')
     def test_init(self, mock_init: MagicMock):
         config_file = "config_file"
         proxy = "mtproxy://secret@proxy.my.site:443"
@@ -72,8 +72,8 @@ class TestTelegramManagerClient(unittest.TestCase):
         )
 
     @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
-    @patch('telegram_upload.client.telegram_manager_client.TelegramUploadClient.__init__')
-    @patch('telegram_upload.client.telegram_manager_client.TelegramUploadClient.start')
+    @patch('telegram_upload._backend._telethon._manager.TelegramUploadClient.__init__')
+    @patch('telegram_upload._backend._telethon._manager.TelegramUploadClient.start')
     def test_start(self, mock_start: MagicMock, _: MagicMock):
         config_file = "config_file"
         phone = "phone"
@@ -93,16 +93,16 @@ class TestTelegramManagerClient(unittest.TestCase):
         )
 
     @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
-    @patch('telegram_upload.client.telegram_manager_client.TelegramManagerClient.__init__', return_value=None)
-    @patch('telegram_upload.client.telegram_manager_client.TelegramManagerClient.get_me')
+    @patch('telegram_upload._backend._telethon._manager.TelethonBackend.__init__', return_value=None)
+    @patch('telegram_upload._backend._telethon._manager.TelethonBackend.get_me')
     def test_me(self, mock_get_me: MagicMock, _: MagicMock):
         me_result = TelegramManagerClient(MagicMock()).me
         mock_get_me.assert_called_once_with()
         self.assertEqual(mock_get_me.return_value, me_result)
 
     @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
-    @patch('telegram_upload.client.telegram_manager_client.TelegramManagerClient.__init__', return_value=None)
-    @patch('telegram_upload.client.telegram_manager_client.TelegramManagerClient.me')
+    @patch('telegram_upload._backend._telethon._manager.TelethonBackend.__init__', return_value=None)
+    @patch('telegram_upload._backend._telethon._manager.TelethonBackend.me')
     def test_max_file_size(self, mock_me: MagicMock, _: MagicMock):
         with self.subTest("Test user max file size"):
             mock_me.premium = False
@@ -118,8 +118,8 @@ class TestTelegramManagerClient(unittest.TestCase):
             self.assertEqual(TelegramManagerClient(MagicMock()).max_file_size, PREMIUM_USER_MAX_FILE_SIZE)
 
     @patch('builtins.open', mock_open(read_data=json.dumps(CONFIG_DATA)))
-    @patch('telegram_upload.client.telegram_manager_client.TelegramManagerClient.__init__', return_value=None)
-    @patch('telegram_upload.client.telegram_manager_client.TelegramManagerClient.me')
+    @patch('telegram_upload._backend._telethon._manager.TelethonBackend.__init__', return_value=None)
+    @patch('telegram_upload._backend._telethon._manager.TelethonBackend.me')
     def test_max_caption_length(self, mock_me: MagicMock, _: MagicMock):
         with self.subTest("Test user max caption length"):
             mock_me.premium = False

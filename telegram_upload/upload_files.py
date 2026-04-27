@@ -19,7 +19,7 @@ mimetypes.init()
 
 
 if TYPE_CHECKING:
-    from telegram_upload.client import TelegramManagerClient
+    from telegram_upload._backend import TelegramManagerClient
 
 
 def is_valid_file(file, error_logger=None):

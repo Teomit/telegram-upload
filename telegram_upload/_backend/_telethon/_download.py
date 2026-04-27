@@ -10,7 +10,7 @@ from telethon import TelegramClient, helpers, utils
 from telethon.client.downloads import MIN_CHUNK_SIZE
 from telethon.crypto import AES
 
-from telegram_upload.client.progress_bar import get_progress_bar
+from telegram_upload._backend._telethon.progress_bar import get_progress_bar
 from telegram_upload.download_files import DownloadFile
 from telegram_upload.exceptions import TelegramUploadNoSpaceError
 from telegram_upload.utils import free_disk_usage, get_environment_integer, sizeof_fmt

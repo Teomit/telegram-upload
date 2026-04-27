@@ -8,7 +8,7 @@ import click
 import requests
 from telethon.tl.types import Message
 
-from telegram_upload.client import TelegramManagerClient
+from telegram_upload._backend import TelegramManagerClient
 from telegram_upload.config import default_config
 from telegram_upload.upload_files import NoLargeFiles
 

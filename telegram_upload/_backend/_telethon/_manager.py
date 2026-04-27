@@ -12,8 +12,8 @@ from telethon.errors import ApiIdInvalidError
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 from telethon.tl.types import DocumentAttributeFilename, InputPeerUser, User
 
-from telegram_upload.client.telegram_download_client import TelegramDownloadClient
-from telegram_upload.client.telegram_upload_client import TelegramUploadClient
+from telegram_upload._backend._telethon._download import TelegramDownloadClient
+from telegram_upload._backend._telethon._upload import TelegramUploadClient
 from telegram_upload.config import SESSION_FILE
 from telegram_upload.exceptions import InvalidApiFileError, TelegramProxyError, TelegramUploadError
 
@@ -74,7 +74,7 @@ def parse_proxy_string(proxy: str | None):
             proxy_parsed.username, proxy_parsed.password)
 
 
-class TelegramManagerClient(TelegramUploadClient, TelegramDownloadClient):
+class TelethonBackend(TelegramUploadClient, TelegramDownloadClient):
     def __init__(self, config_file, proxy=None, **kwargs):
         self.config_file = config_file
 

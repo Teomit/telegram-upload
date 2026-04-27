@@ -14,7 +14,7 @@ from telethon.tl.patched import Message
 import matplotlib.pyplot as plt
 
 from telegram_upload.caption_formatter import FileSize
-from telegram_upload.client import TelegramManagerClient
+from telegram_upload._backend import TelegramManagerClient
 from telegram_upload.config import default_config
 from telegram_upload.upload_files import NoLargeFiles
 

@@ -3,7 +3,7 @@ import logging
 
 import click
 
-from telegram_upload.client import TelegramManagerClient, get_message_file_attribute
+from telegram_upload._backend import TelegramManagerClient, get_message_file_attribute
 from telegram_upload.config import CONFIG_FILE, default_config
 from telegram_upload.download_files import JoinDownloadSplitFiles, KeepDownloadSplitFiles
 from telegram_upload.exceptions import catch

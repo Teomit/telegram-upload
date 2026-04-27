@@ -12,7 +12,7 @@ from telethon.errors import FloodWaitError, InvalidBufferError, RPCError
 from telethon.tl import TLRequest, functions, types
 from telethon.utils import pack_bot_file_id
 
-from telegram_upload.client.progress_bar import get_progress_bar
+from telegram_upload._backend._telethon.progress_bar import get_progress_bar
 from telegram_upload.exceptions import MissingFileError, TelegramUploadDataLoss
 from telegram_upload.upload_files import File
 from telegram_upload.utils import async_to_sync, get_environment_integer, grouper

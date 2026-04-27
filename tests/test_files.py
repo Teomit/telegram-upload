@@ -2,8 +2,8 @@ import os
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
+from telegram_upload._backend._telethon._manager import USER_MAX_FILE_SIZE
 from telegram_upload._media import MediaInfo
-from telegram_upload.client.telegram_manager_client import USER_MAX_FILE_SIZE
 from telegram_upload.exceptions import TelegramInvalidFile
 from telegram_upload.upload_files import (
     NoDirectoriesFiles,
