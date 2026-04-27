@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from click.testing import CliRunner
 from telethon.tl.types import DocumentAttributeFilename, User
 
-from telegram_upload.management import upload, download, get_file_display_name
+from telegram_upload.management import download, get_file_display_name, upload
 
 directory = os.path.dirname(os.path.abspath(__file__))
 

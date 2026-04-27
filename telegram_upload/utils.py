@@ -25,11 +25,11 @@ def grouper(n, iterable):
 
 
 def sizeof_fmt(num, suffix='B'):
-    for unit in ['','Ki','Mi','Gi','Ti','Pi','Ei','Zi']:
+    for unit in ('', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi'):
         if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
+            return f"{num:3.1f}{unit}{suffix}"
         num /= 1024.0
-    return "%.1f%s%s" % (num, 'Yi', suffix)
+    return f"{num:.1f}Yi{suffix}"
 
 
 def scantree(path, follow_symlinks=False):
@@ -103,7 +103,7 @@ def get_environment_integer(environment_name: str, default_value: int) -> int:
 
     try:
         return int(value)
-    except ValueError:
+    except ValueError as e:
         raise TelegramEnvironmentError(
             f"Environment variable {environment_name} must be an integer, got: '{value}'"
-        )
+        ) from e

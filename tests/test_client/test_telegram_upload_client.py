@@ -1,14 +1,13 @@
 import json
 import os
-import unittest
 from unittest import IsolatedAsyncioTestCase
-from unittest.mock import AsyncMock, patch, mock_open, Mock, MagicMock, call
+from unittest.mock import AsyncMock, MagicMock, Mock, call, mock_open, patch
 
 from telethon import types
 from telethon.errors import FloodWaitError, RPCError
 
 from telegram_upload.client.telegram_upload_client import TelegramUploadClient
-from telegram_upload.exceptions import TelegramUploadDataLoss, MissingFileError
+from telegram_upload.exceptions import MissingFileError, TelegramUploadDataLoss
 from telegram_upload.upload_files import File
 
 CONFIG_DATA = {'api_hash': '', 'api_id': ''}
@@ -16,7 +15,7 @@ CONFIG_DATA = {'api_hash': '', 'api_id': ''}
 directory = os.path.join(os.path.abspath(os.path.dirname(__file__)), '../../')
 
 
-class AnyArg(object):
+class AnyArg:
     """https://stackoverflow.com/questions/20428750/pythons-assert-called-with-is-there-a-wildcard-character"""
     def __eq__(a, b):
         return True

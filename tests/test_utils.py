@@ -1,7 +1,7 @@
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
-from telegram_upload.utils import sizeof_fmt, scantree
+from telegram_upload.utils import scantree, sizeof_fmt
 
 
 class TestSizeOfFmt(unittest.TestCase):

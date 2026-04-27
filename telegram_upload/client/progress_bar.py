@@ -4,7 +4,7 @@ import click
 
 
 def get_progress_bar(action, file, length):
-    bar = click.progressbar(label='{} "{}"'.format(action, file), length=length)
+    bar = click.progressbar(label=f'{action} "{file}"', length=length)
     last_current = c_int64(0)
 
     def progress(current, total):

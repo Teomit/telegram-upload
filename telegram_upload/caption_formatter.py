@@ -5,14 +5,15 @@ import logging
 import mimetypes
 import os
 import zlib
+from collections.abc import Mapping, Sequence
 from functools import cached_property
 from pathlib import Path, PosixPath, WindowsPath
 from string import Formatter
-from typing import Any, Sequence, Mapping, Tuple, Optional
+from typing import Any
 
 import click
 
-from telegram_upload.constants import DURATION_SEPARATOR, DURATION_LAST_SEPARATOR
+from telegram_upload.constants import DURATION_LAST_SEPARATOR, DURATION_SEPARATOR
 from telegram_upload.metadata_helpers import get_video_metadata_stream
 from telegram_upload.video import video_metadata
 
@@ -25,7 +26,7 @@ except ImportError:
 
 
 CHUNK_SIZE = 4096
-VALID_TYPES: Tuple[Any, ...] = (str, int, float, complex, bool, datetime.datetime, datetime.date, datetime.time)
+VALID_TYPES: tuple[Any, ...] = (str, int, float, complex, bool, datetime.datetime, datetime.date, datetime.time)
 AUTHORIZED_METHODS = (Path.home,)
 AUTHORIZED_STRING_METHODS = ("title", "capitalize", "lower", "upper", "swapcase", "strip", "lstrip", "rstrip")
 AUTHORIZED_DT_METHODS = (
@@ -141,40 +142,40 @@ class FileMedia:
         return get_video_metadata_stream(self.metadata)
 
     @property
-    def duration(self) -> Optional[Duration]:
+    def duration(self) -> Duration | None:
         if self.metadata and self.metadata.has('duration'):
             return Duration(self.metadata.get('duration').seconds)
 
-    def _get_video_metadata(self, key: str) -> Optional[Any]:
+    def _get_video_metadata(self, key: str) -> Any | None:
         if self.video_metadata and self.video_metadata.has(key):
             return self.video_metadata.get(key)
 
-    def _get_metadata(self, key: str) -> Optional[Any]:
+    def _get_metadata(self, key: str) -> Any | None:
         if self.metadata and self.metadata.has(key):
             return self.metadata.get(key)
 
     @property
-    def width(self) -> Optional[int]:
+    def width(self) -> int | None:
         return self._get_video_metadata('width')
 
     @property
-    def height(self) -> Optional[int]:
+    def height(self) -> int | None:
         return self._get_video_metadata('height')
 
     @property
-    def title(self) -> Optional[str]:
+    def title(self) -> str | None:
         return self._get_metadata('title')
 
     @property
-    def artist(self) -> Optional[str]:
+    def artist(self) -> str | None:
         return self._get_metadata('artist')
 
     @property
-    def album(self) -> Optional[str]:
+    def album(self) -> str | None:
         return self._get_metadata('album')
 
     @property
-    def producer(self) -> Optional[str]:
+    def producer(self) -> str | None:
         return self._get_metadata('producer')
 
 
@@ -272,7 +273,7 @@ class FileMixin:
         return FileMedia(str(self))
 
     @cached_property
-    def mimetype(self) -> Optional[str]:
+    def mimetype(self) -> str | None:
         mimetypes.init()
         return mimetypes.guess_type(str(self))[0]
 
@@ -295,8 +296,7 @@ class FilePath(FileMixin, Path):
             cls = WindowsFilePath if os.name == 'nt' else PosixFilePath
         self = cls._from_parts(args)
         if not self._flavour.is_supported:
-            raise NotImplementedError("cannot instantiate %r on your system"
-                                      % (cls.__name__,))
+            raise NotImplementedError(f"cannot instantiate {cls.__name__!r} on your system")
         return self
 
 

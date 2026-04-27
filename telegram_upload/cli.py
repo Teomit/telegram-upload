@@ -1,11 +1,12 @@
 import asyncio
-from typing import Sequence, Tuple, List, TypeVar
+from collections.abc import Sequence
+from typing import TypeVar
 
 import click
 from prompt_toolkit.filters import Condition
 from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout import FormattedTextControl, Window, ConditionalMargin, ScrollbarMargin
+from prompt_toolkit.layout import ConditionalMargin, FormattedTextControl, ScrollbarMargin, Window
 from prompt_toolkit.widgets import CheckboxList, RadioList
 from prompt_toolkit.widgets.base import E, _DialogList
 
@@ -29,10 +30,10 @@ async def async_handler(handler, event):
 class IterableDialogList(_DialogList):
     many = False
 
-    def __init__(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
+    def __init__(self, values: Sequence[tuple[_T, AnyFormattedText]]) -> None:
         pass
 
-    async def _init(self, values: Sequence[Tuple[_T, AnyFormattedText]]) -> None:
+    async def _init(self, values: Sequence[tuple[_T, AnyFormattedText]]) -> None:
         started_values = await aislice(values, PAGE_SIZE)
 
         # started_values = await aislice(values, PAGE_SIZE)
@@ -41,7 +42,7 @@ class IterableDialogList(_DialogList):
         self.values = started_values
         # current_values will be used in multiple_selection,
         # current_value will be used otherwise.
-        self.current_values: List[_T] = []
+        self.current_values: list[_T] = []
         self.current_value: _T = started_values[0][0]
         self._selected_index = 0
 

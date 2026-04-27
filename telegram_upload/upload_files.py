@@ -1,16 +1,13 @@
 import datetime
 import math
-import os
-
-
 import mimetypes
-from io import FileIO, SEEK_SET
-from typing import Union, TYPE_CHECKING, List, Optional
+import os
+from io import SEEK_SET, FileIO
+from typing import TYPE_CHECKING
 
 import click
-from hachoir.metadata.metadata import RootMetadata
 from hachoir.metadata.video import MP4Metadata
-from telethon.tl.types import DocumentAttributeVideo, DocumentAttributeFilename
+from telethon.tl.types import DocumentAttributeFilename, DocumentAttributeVideo
 
 from telegram_upload.caption_formatter import CaptionFormatter, FilePath
 from telegram_upload.constants import SPLIT_FILE_PART_NUMBER_PADDING
@@ -29,9 +26,9 @@ if TYPE_CHECKING:
 def is_valid_file(file, error_logger=None):
     error_message = None
     if not os.path.lexists(file):
-        error_message = 'File "{}" does not exist.'.format(file)
+        error_message = f'File "{file}" does not exist.'
     elif not os.path.getsize(file):
-        error_message = 'File "{}" is empty.'.format(file)
+        error_message = f'File "{file}" is empty.'
     if error_message and error_logger is not None:
         error_logger(error_message)
     return error_message is None
@@ -50,7 +47,7 @@ def get_file_mime(file: str) -> str:
     return (mimetypes.guess_type(file)[0] or '').split('/')[0]
 
 
-def get_file_attributes(file: str) -> List:
+def get_file_attributes(file: str) -> list:
     """
     Get Telegram document attributes for a file.
 
@@ -78,7 +75,7 @@ def get_file_attributes(file: str) -> List:
     return attrs
 
 
-def get_file_thumb(file: str) -> Optional[str]:
+def get_file_thumb(file: str) -> str | None:
     """
     Get thumbnail path for a file.
 
@@ -94,8 +91,8 @@ def get_file_thumb(file: str) -> Optional[str]:
 
 
 class UploadFilesBase:
-    def __init__(self, client: 'TelegramManagerClient', files, thumbnail: Union[str, bool, None] = None,
-                 force_file: bool = False, caption: Union[str, None] = None):
+    def __init__(self, client: 'TelegramManagerClient', files, thumbnail: str | bool | None = None,
+                 force_file: bool = False, caption: str | None = None):
         self._iterator = None
         self.client = client
         self.files = files
@@ -121,8 +118,7 @@ class RecursiveFiles(UploadFilesBase):
     def get_iterator(self):
         for file in self.files:
             if os.path.isdir(file):
-                yield from map(lambda file: file.path,
-                               filter(lambda x: not x.is_dir(), scantree(file, True)))
+                yield from (entry.path for entry in scantree(file, True) if not entry.is_dir())
             else:
                 yield file
 
@@ -131,7 +127,7 @@ class NoDirectoriesFiles(UploadFilesBase):
     def get_iterator(self):
         for file in self.files:
             if os.path.isdir(file):
-                raise TelegramInvalidFile('"{}" is a directory.'.format(file))
+                raise TelegramInvalidFile(f'"{file}" is a directory.')
             else:
                 yield file
 
@@ -153,14 +149,14 @@ class LargeFilesBase(UploadFilesBase):
 
 class NoLargeFiles(LargeFilesBase):
     def process_large_file(self, file):
-        raise TelegramInvalidFile('"{}" file is too large for Telegram.'.format(file))
+        raise TelegramInvalidFile(f'"{file}" file is too large for Telegram.')
 
 
 class File(FileIO):
     force_file = False
 
-    def __init__(self, client: 'TelegramManagerClient', path: str, force_file: Union[bool, None] = None,
-                 thumbnail: Union[str, bool, None] = None, caption: Union[str, None] = None):
+    def __init__(self, client: 'TelegramManagerClient', path: str, force_file: bool | None = None,
+                 thumbnail: str | bool | None = None, caption: str | None = None):
         super().__init__(path)
         self.client = client
         self.path = path
@@ -203,12 +199,12 @@ class File(FileIO):
             try:
                 thumb = get_file_thumb(self.path)
             except ThumbError as e:
-                click.echo('{}'.format(e), err=True)
+                click.echo(f'{e}', err=True)
         elif self.is_custom_thumbnail:
             if not isinstance(self._thumbnail, str):
-                raise TypeError('Invalid type for thumbnail: {}'.format(type(self._thumbnail)))
+                raise TypeError(f'Invalid type for thumbnail: {type(self._thumbnail)}')
             elif not os.path.lexists(self._thumbnail):
-                raise TelegramInvalidFile('{} thumbnail file does not exists.'.format(self._thumbnail))
+                raise TelegramInvalidFile(f'{self._thumbnail} thumbnail file does not exists.')
             thumb = self._thumbnail
         return thumb
 
@@ -223,7 +219,7 @@ class File(FileIO):
 class SplitFile(File, FileIO):
     force_file = True
 
-    def __init__(self, client: 'TelegramManagerClient', file: Union[str, bytes, int], max_read_size: int, name: str):
+    def __init__(self, client: 'TelegramManagerClient', file: str | bytes | int, max_read_size: int, name: str):
         super().__init__(client, file)
         self.max_read_size = max_read_size
         self.remaining_size = max_read_size
@@ -267,6 +263,6 @@ class SplitFiles(LargeFilesBase):
         zfill = SPLIT_FILE_PART_NUMBER_PADDING
         for part in range(parts):
             size = total_size - (part * self.client.max_file_size) if part >= parts - 1 else self.client.max_file_size
-            splitted_file = SplitFile(self.client, file, size, '{}.{}'.format(file_name, str(part).zfill(zfill)))
+            splitted_file = SplitFile(self.client, file, size, f'{file_name}.{str(part).zfill(zfill)}')
             splitted_file.seek(self.client.max_file_size * part, split_seek=True)
             yield splitted_file

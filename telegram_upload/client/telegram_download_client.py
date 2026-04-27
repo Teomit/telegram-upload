@@ -2,18 +2,21 @@ import asyncio
 import inspect
 import io
 import pathlib
-import typing
-from typing import Iterable
+from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 from more_itertools import grouper
-from telethon import TelegramClient, utils, helpers
+from telethon import TelegramClient, helpers, utils
 from telethon.client.downloads import MIN_CHUNK_SIZE
 from telethon.crypto import AES
 
 from telegram_upload.client.progress_bar import get_progress_bar
 from telegram_upload.download_files import DownloadFile
 from telegram_upload.exceptions import TelegramUploadNoSpaceError
-from telegram_upload.utils import free_disk_usage, sizeof_fmt, get_environment_integer
+from telegram_upload.utils import free_disk_usage, get_environment_integer, sizeof_fmt
+
+if TYPE_CHECKING:
+    from telethon import hints  # noqa: F401  -- used only in string annotations
 
 PARALLEL_DOWNLOAD_BLOCKS = get_environment_integer('TELEGRAM_UPLOAD_PARALLEL_DOWNLOAD_BLOCKS', 10)
 
@@ -35,9 +38,7 @@ class TelegramDownloadClient(TelegramClient):
         for download_file in download_files:
             if download_file.size > free_disk_usage():
                 raise TelegramUploadNoSpaceError(
-                    'There is no disk space to download "{}". Space required: {}'.format(
-                        download_file.file_name, sizeof_fmt(download_file.size - free_disk_usage())
-                    )
+                    f'There is no disk space to download "{download_file.file_name}". Space required: {sizeof_fmt(download_file.size - free_disk_usage())}'
                 )
             progress, bar = get_progress_bar('Downloading', download_file.file_name, download_file.size)
             file_name = download_file.file_name
@@ -62,12 +63,9 @@ class TelegramDownloadClient(TelegramClient):
             dc_id: int = None,
             key: bytes = None,
             iv: bytes = None,
-            msg_data: tuple = None) -> typing.Optional[bytes]:
+            msg_data: tuple = None) -> bytes | None:
         if not part_size_kb:
-            if not file_size:
-                part_size_kb = 64  # Reasonable default
-            else:
-                part_size_kb = utils.get_appropriated_part_size(file_size)
+            part_size_kb = utils.get_appropriated_part_size(file_size) if file_size else 64
 
         part_size = int(part_size_kb * 1024)
         if part_size % MIN_CHUNK_SIZE != 0:
@@ -83,7 +81,7 @@ class TelegramDownloadClient(TelegramClient):
         elif isinstance(file, str):
             # Ensure that we'll be able to download the media
             helpers.ensure_parent_dir_exists(file)
-            f = open(file, 'wb')
+            f = open(file, 'wb')  # noqa: SIM115 -- closed in finally below
         else:
             f = file
 

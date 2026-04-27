@@ -1,11 +1,19 @@
 import unittest
 from io import BytesIO
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from telethon.tl.types import DocumentAttributeFilename
 
-from telegram_upload.download_files import pipe_file, CHUNK_FILE_SIZE, JoinStrategyBase, UnionJoinStrategy, \
-    get_join_strategy, DownloadFile, KeepDownloadSplitFiles, JoinDownloadSplitFiles
+from telegram_upload.download_files import (
+    CHUNK_FILE_SIZE,
+    DownloadFile,
+    JoinDownloadSplitFiles,
+    JoinStrategyBase,
+    KeepDownloadSplitFiles,
+    UnionJoinStrategy,
+    get_join_strategy,
+    pipe_file,
+)
 
 
 class TestPipeFile(unittest.TestCase):

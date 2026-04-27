@@ -1,8 +1,9 @@
 import os
+from collections.abc import Iterable, Iterator
 from functools import cached_property
-from typing import Iterable, Iterator, Optional, BinaryIO
+from typing import BinaryIO
 
-from telethon.tl.types import Message, DocumentAttributeFilename
+from telethon.tl.types import DocumentAttributeFilename, Message
 
 CHUNK_FILE_SIZE = 1024 * 1024
 
@@ -49,7 +50,7 @@ class UnionJoinStrategy(JoinStrategyBase):
     """Join separate files without any application. These files have extension
     01, 02, 03...
     """
-    base_name: Optional[str] = None
+    base_name: str | None = None
 
     @staticmethod
     def get_base_name(download_file: 'DownloadFile'):
@@ -91,7 +92,7 @@ JOIN_STRATEGIES = [
 ]
 
 
-def get_join_strategy(download_file: 'DownloadFile') -> Optional[JoinStrategyBase]:
+def get_join_strategy(download_file: 'DownloadFile') -> JoinStrategyBase | None:
     """Get join strategy for the download file. An instance is returned if a strategy
     is available. Otherwise, None is returned.
     """
@@ -104,7 +105,7 @@ def get_join_strategy(download_file: 'DownloadFile') -> Optional[JoinStrategyBas
 
 class DownloadFile:
     """File to download. This includes the Telethon message with the file."""
-    downloaded_file_name: Optional[str] = None
+    downloaded_file_name: str | None = None
 
     def __init__(self, message: Message):
         """Creates the download file instance from the message."""
@@ -115,7 +116,7 @@ class DownloadFile:
         self.downloaded_file_name = file_name
 
     @cached_property
-    def filename_attr(self) -> Optional[DocumentAttributeFilename]:
+    def filename_attr(self) -> DocumentAttributeFilename | None:
         """Get the document attribute file name attribute in the document."""
         return next(filter(lambda x: isinstance(x, DocumentAttributeFilename),
                            self.document.attributes), None)
@@ -171,7 +172,7 @@ class KeepDownloadSplitFiles(DownloadSplitFilesBase):
     """Download split files without join it."""
     def get_iterator(self) -> Iterator[DownloadFile]:
         """Get an iterator with the download files."""
-        return map(lambda message: DownloadFile(message), self.messages)
+        return (DownloadFile(message) for message in self.messages)
 
 
 class JoinDownloadSplitFiles(DownloadSplitFilesBase):
@@ -180,7 +181,7 @@ class JoinDownloadSplitFiles(DownloadSplitFilesBase):
         """Get an iterator with the download files. This method applies the join strategy and
         joins the files after download it.
         """
-        current_join_strategy: Optional[JoinStrategyBase] = None
+        current_join_strategy: JoinStrategyBase | None = None
         for message in self.messages:
             download_file = DownloadFile(message)
             yield download_file

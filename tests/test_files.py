@@ -1,11 +1,17 @@
 import os
 import unittest
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from telegram_upload.client.telegram_manager_client import USER_MAX_FILE_SIZE
 from telegram_upload.exceptions import TelegramInvalidFile
-from telegram_upload.upload_files import get_file_attributes, RecursiveFiles, NoDirectoriesFiles, NoLargeFiles, \
-    SplitFiles, SplitFile
+from telegram_upload.upload_files import (
+    NoDirectoriesFiles,
+    NoLargeFiles,
+    RecursiveFiles,
+    SplitFile,
+    SplitFiles,
+    get_file_attributes,
+)
 
 
 class TestGetFileAttributes(unittest.TestCase):

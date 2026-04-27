@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 
 """Console script for telegram-upload."""
 import logging
@@ -9,13 +8,12 @@ from telethon.tl.types import User
 
 from telegram_upload.cli import show_checkboxlist, show_radiolist
 from telegram_upload.client import TelegramManagerClient, get_message_file_attribute
-from telegram_upload.config import default_config, CONFIG_FILE
-from telegram_upload.download_files import KeepDownloadSplitFiles, JoinDownloadSplitFiles
+from telegram_upload.config import CONFIG_FILE, default_config
+from telegram_upload.download_files import JoinDownloadSplitFiles, KeepDownloadSplitFiles
 from telegram_upload.exceptions import catch
 from telegram_upload.logging_config import setup_logging
-from telegram_upload.upload_files import NoDirectoriesFiles, RecursiveFiles, NoLargeFiles, SplitFiles, is_valid_file
-from telegram_upload.utils import async_to_sync, amap, sync_to_async_iterator
-
+from telegram_upload.upload_files import NoDirectoriesFiles, NoLargeFiles, RecursiveFiles, SplitFiles, is_valid_file
+from telegram_upload.utils import amap, async_to_sync, sync_to_async_iterator
 
 try:
     from natsort import natsorted
@@ -67,7 +65,7 @@ async def interactive_select_files(client, entity: str):
 
 async def interactive_select_local_files():
     iterator = filter(lambda x: os.path.isfile(x) and os.path.lexists(x), os.listdir('.'))
-    iterator = sync_to_async_iterator(map(lambda x: (x, x), iterator))
+    iterator = sync_to_async_iterator((x, x) for x in iterator)
     return await show_checkboxlist(iterator, 'Not files were found in the current directory '
                                              '(subdirectories are not supported). Exiting...')
 
@@ -87,21 +85,18 @@ class MutuallyExclusiveOption(click.Option):
         if self.mutually_exclusive:
             kwargs['help'] = help + (
                 ' NOTE: This argument is mutually exclusive with'
-                ' arguments: [{}].'.format(self.mutually_exclusive_text)
+                f' arguments: [{self.mutually_exclusive_text}].'
             )
-        super(MutuallyExclusiveOption, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def handle_parse_result(self, ctx, opts, args):
         if self.mutually_exclusive.intersection(opts) and self.name in opts:
             raise click.UsageError(
-                "Illegal usage: `{}` is mutually exclusive with "
-                "arguments `{}`.".format(
-                    self.name,
-                    self.mutually_exclusive_text
-                )
+                f"Illegal usage: `{self.name}` is mutually exclusive with "
+                f"arguments `{self.mutually_exclusive_text}`."
             )
 
-        return super(MutuallyExclusiveOption, self).handle_parse_result(
+        return super().handle_parse_result(
             ctx,
             opts,
             args
@@ -116,7 +111,7 @@ class MutuallyExclusiveOption(click.Option):
 @click.argument('files', nargs=-1)
 @click.option('--to', default=None, help='Phone number, username, invite link or "me" (saved messages). '
                                          'By default "me".')
-@click.option('--config', default=None, help='Configuration file to use. By default "{}".'.format(CONFIG_FILE))
+@click.option('--config', default=None, help=f'Configuration file to use. By default "{CONFIG_FILE}".')
 @click.option('-d', '--delete-on-success', is_flag=True, help='Delete local file after successful upload.')
 @click.option('--print-file-id', is_flag=True, help='Print the id of the uploaded file after the upload.')
 @click.option('--force-file', is_flag=True, help='Force send as a file. The filename will be preserved '
@@ -203,7 +198,7 @@ def upload(files, to, config, delete_on_success, print_file_id, force_file, forw
 @click.command()
 @click.option('--from', '-f', 'from_', default='',
               help='Phone number, username, chat id or "me" (saved messages). By default "me".')
-@click.option('--config', default=None, help='Configuration file to use. By default "{}".'.format(CONFIG_FILE))
+@click.option('--config', default=None, help=f'Configuration file to use. By default "{CONFIG_FILE}".')
 @click.option('-d', '--delete-on-success', is_flag=True,
               help='Delete telegram message after successful download. Useful for creating a download queue.')
 @click.option('-p', '--proxy', default=None,
@@ -252,8 +247,8 @@ download_cli = catch(download)
 
 
 if __name__ == '__main__':
-    import sys
     import re
+    import sys
     sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
     commands = {'upload': upload_cli, 'download': download_cli}
     if len(sys.argv) < 2:

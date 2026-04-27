@@ -1,87 +1,43 @@
-.PHONY: clean clean-test clean-pyc clean-build docs help
+.PHONY: help clean lint test coverage docs build install dev
 .DEFAULT_GOAL := help
-define BROWSER_PYSCRIPT
-import os, webbrowser, sys
-try:
-	from urllib import pathname2url
-except:
-	from urllib.request import pathname2url
-
-webbrowser.open("file://" + pathname2url(os.path.abspath(sys.argv[1])))
-endef
-export BROWSER_PYSCRIPT
-
-define PRINT_HELP_PYSCRIPT
-import re, sys
-
-for line in sys.stdin:
-	match = re.match(r'^([a-zA-Z_-]+):.*?## (.*)$$', line)
-	if match:
-		target, help = match.groups()
-		print("%-20s %s" % (target, help))
-endef
-export PRINT_HELP_PYSCRIPT
-BROWSER := python -c "$$BROWSER_PYSCRIPT"
 
 help:
-	@python -c "$$PRINT_HELP_PYSCRIPT" < $(MAKEFILE_LIST)
+	@echo "Targets:"
+	@echo "  install    Install project (editable) with dev extras"
+	@echo "  dev        Install pre-commit hooks"
+	@echo "  lint       Run ruff check + format check"
+	@echo "  test       Run unit tests"
+	@echo "  coverage   Run tests with coverage report"
+	@echo "  build      Build sdist + wheel into dist/"
+	@echo "  docs       Build Sphinx HTML docs"
+	@echo "  clean      Remove build / cache artifacts"
 
-clean: clean-build clean-pyc clean-test ## remove all build, test, coverage and Python artifacts
+install:
+	python -m pip install -e ".[dev]"
 
+dev: install
+	pre-commit install
 
-clean-build: ## remove build artifacts
-	rm -fr build/
-	rm -fr dist/
-	rm -fr .eggs/
-	find . -name '*.egg-info' -exec rm -fr {} +
-	find . -name '*.egg' -exec rm -f {} +
+lint:
+	ruff check .
+	ruff format --check .
 
-clean-pyc: ## remove Python file artifacts
-	find . -name '*.pyc' -exec rm -f {} +
-	find . -name '*.pyo' -exec rm -f {} +
-	find . -name '*~' -exec rm -f {} +
-	find . -name '__pycache__' -exec rm -fr {} +
+test:
+	python -m unittest discover
 
-clean-test: ## remove test and coverage artifacts
-	rm -fr .tox/
-	rm -f .coverage
-	rm -fr htmlcov/
-
-lint: ## check style with flake8
-	flake8 telegram_upload tests
-
-test: ## run tests quickly with the default Python
-	
-		python setup.py test
-
-test-all: ## run tests on every Python version with tox
-	tox
-
-coverage: ## check code coverage quickly with the default Python
-	coverage run --source telegram_upload setup.py test
+coverage:
+	coverage run -m unittest discover
 	coverage report -m
-	coverage html
-	$(BROWSER) htmlcov/index.html
 
-docs: ## generate Sphinx HTML documentation, including API docs
-	rm -f docs/telegram_upload.rst
-	rm -f docs/modules.rst
-	sphinx-apidoc -o docs/ telegram_upload
-	$(MAKE) -C docs clean
-	$(MAKE) -C docs html
-	$(BROWSER) docs/_build/html/index.html
-
-servedocs: docs ## compile the docs watching for changes
-	watchmedo shell-command -p '*.rst' -c '$(MAKE) -C docs html' -R -D .
-
-release: clean ## package and upload a release
-	python setup.py sdist upload
-	python setup.py bdist_wheel upload
-
-dist: clean ## builds source and wheel package
-	python setup.py sdist
-	python setup.py bdist_wheel
+build: clean
+	python -m build
 	ls -l dist
 
-install: clean ## install the package to the active Python's site-packages
-	python setup.py install
+docs:
+	$(MAKE) -C docs clean
+	$(MAKE) -C docs html
+
+clean:
+	rm -rf build/ dist/ *.egg-info .eggs htmlcov/ .coverage .tox/
+	find . -type d -name __pycache__ -prune -exec rm -rf {} +
+	find . -type f -name '*.py[co]' -delete

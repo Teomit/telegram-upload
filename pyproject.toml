@@ -1,0 +1,103 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "telegram-upload"
+description = "Upload (and download) files to Telegram up to 4 GiB using your account."
+readme = "README.rst"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Nekmo", email = "contacto@nekmo.com" },
+]
+keywords = ["telegram-upload", "telegram", "upload", "video"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dynamic = ["version", "dependencies"]
+
+[project.optional-dependencies]
+dev = [
+    "ruff",
+    "pre-commit",
+    "coverage",
+    "bump-my-version",
+    "tox>=4.0",
+    "sphinx-click",
+]
+
+[project.urls]
+Homepage = "https://github.com/Nekmo/telegram-upload/"
+Source = "https://github.com/Nekmo/telegram-upload/"
+Documentation = "https://docs.nekmo.org/telegram-upload/"
+
+[project.scripts]
+telegram-upload = "telegram_upload.management:upload_cli"
+telegram-download = "telegram_upload.management:download_cli"
+
+[tool.setuptools.packages.find]
+include = ["telegram_upload*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "telegram_upload.__version__" }
+dependencies = { file = ["requirements.txt"] }
+
+[tool.ruff]
+line-length = 120
+target-version = "py311"
+extend-exclude = ["docs", "build", "dist"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "UP",   # pyupgrade
+    "SIM",  # flake8-simplify
+    "C4",   # flake8-comprehensions
+]
+ignore = [
+    "E501",   # line too long (line-length handles obvious cases; long URLs/strings are ok)
+    "B008",   # function call in argument default — click's pattern
+    "SIM117", # nested with — sometimes clearer
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B017", "SIM"]    # tests can use bare excepts/asserts liberally
+
+[tool.coverage.run]
+source = ["telegram_upload"]
+branch = true
+
+[tool.bumpversion]
+current_version = "0.7.1"
+commit = true
+tag = true
+
+[[tool.bumpversion.files]]
+filename = "telegram_upload/__init__.py"
+search = "__version__ = '{current_version}'"
+replace = "__version__ = '{new_version}'"
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]

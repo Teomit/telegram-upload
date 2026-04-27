@@ -1,11 +1,18 @@
 import unittest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open, call
+from unittest.mock import MagicMock, call, mock_open, patch
 
 from click.testing import CliRunner
 
-from telegram_upload.caption_formatter import Duration, FileSize, FileMedia, FilePath, CHUNK_SIZE, CaptionFormatter, \
-    test_caption_format
+from telegram_upload.caption_formatter import (
+    CHUNK_SIZE,
+    CaptionFormatter,
+    Duration,
+    FileMedia,
+    FilePath,
+    FileSize,
+    test_caption_format,
+)
 
 
 class TestDuration(unittest.TestCase):

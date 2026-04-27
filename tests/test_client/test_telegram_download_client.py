@@ -1,7 +1,6 @@
-import asyncio
 import json
 import unittest
-from unittest.mock import patch, mock_open, Mock, MagicMock, call
+from unittest.mock import MagicMock, Mock, call, mock_open, patch
 
 from telethon.tl.types import DocumentAttributeFilename
 
@@ -47,7 +46,7 @@ class TestTelegramDownloadClient(unittest.TestCase):
     @patch("telegram_upload.client.telegram_download_client.asyncio.wait")
     def test_download_file(self, mock_wait: MagicMock, mock_iter_download_chunk_tasks: MagicMock):
         mock_iter_download_chunk_tasks.return_value = [
-            MagicMock(**{"result.return_value": f"foo{i}".encode("utf-8")}) for i in range(2)
+            MagicMock(**{"result.return_value": f"foo{i}".encode()}) for i in range(2)
         ]
         mock_input_location = MagicMock()
         mock_file = MagicMock()

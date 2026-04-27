@@ -4,19 +4,18 @@ import logging
 import os
 import re
 from functools import cached_property
-from typing import Union
 from urllib.parse import urlparse
 
 import click
 import telethon.sync  # noqa: F401  -- side-effect import enabling sync API
 from telethon.errors import ApiIdInvalidError
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
-from telethon.tl.types import DocumentAttributeFilename, User, InputPeerUser
+from telethon.tl.types import DocumentAttributeFilename, InputPeerUser, User
 
 from telegram_upload.client.telegram_download_client import TelegramDownloadClient
 from telegram_upload.client.telegram_upload_client import TelegramUploadClient
 from telegram_upload.config import SESSION_FILE
-from telegram_upload.exceptions import TelegramProxyError, InvalidApiFileError, TelegramUploadError
+from telegram_upload.exceptions import InvalidApiFileError, TelegramProxyError, TelegramUploadError
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +40,7 @@ def get_message_file_attribute(message):
 def phone_match(value):
     match = re.match(r'\+?[0-9.()\[\] \-]+', value)
     if match is None:
-        raise ValueError('{} is not a valid phone'.format(value))
+        raise ValueError(f'{value} is not a valid phone')
     return value
 
 
@@ -51,26 +50,26 @@ def get_proxy_environment_variable():
             return os.environ[env_name]
 
 
-def parse_proxy_string(proxy: Union[str, None]):
+def parse_proxy_string(proxy: str | None):
     if not proxy:
         return None
     proxy_parsed = urlparse(proxy)
     if not proxy_parsed.scheme or not proxy_parsed.hostname or not proxy_parsed.port:
-        raise TelegramProxyError('Malformed proxy address: {}'.format(proxy))
+        raise TelegramProxyError(f'Malformed proxy address: {proxy}')
     if proxy_parsed.scheme == 'mtproxy':
         return ('mtproxy', proxy_parsed.hostname, proxy_parsed.port, proxy_parsed.username)
     try:
         import socks
-    except ImportError:
+    except ImportError as e:
         raise TelegramProxyError('pysocks module is required for use HTTP/socks proxies. '
-                                 'Install it using: pip install pysocks')
+                                 'Install it using: pip install pysocks') from e
     proxy_type = {
         'http': socks.HTTP,
         'socks4': socks.SOCKS4,
         'socks5': socks.SOCKS5,
     }.get(proxy_parsed.scheme)
     if proxy_type is None:
-        raise TelegramProxyError('Unsupported proxy type: {}'.format(proxy_parsed.scheme))
+        raise TelegramProxyError(f'Unsupported proxy type: {proxy_parsed.scheme}')
     return (proxy_type, proxy_parsed.hostname, proxy_parsed.port, True,
             proxy_parsed.username, proxy_parsed.password)
 
@@ -81,27 +80,27 @@ class TelegramManagerClient(TelegramUploadClient, TelegramDownloadClient):
 
         # Load and validate configuration file with proper error handling
         try:
-            with open(config_file, 'r', encoding='utf-8') as f:
+            with open(config_file, encoding='utf-8') as f:
                 config = json.load(f)
-        except FileNotFoundError:
+        except FileNotFoundError as e:
             raise TelegramUploadError(
                 f"Configuration file not found: {config_file}\n"
                 f"Please create a config file or run telegram-upload with --config option."
-            )
+            ) from e
         except json.JSONDecodeError as e:
             raise TelegramUploadError(
                 f"Invalid JSON in configuration file {config_file}:\n"
                 f"  Line {e.lineno}, Column {e.colno}: {e.msg}\n"
                 f"Please check your JSON syntax."
-            )
-        except PermissionError:
+            ) from e
+        except PermissionError as e:
             raise TelegramUploadError(
                 f"Permission denied when reading configuration file: {config_file}"
-            )
+            ) from e
         except OSError as e:
             raise TelegramUploadError(
                 f"Failed to read configuration file {config_file}: {e}"
-            )
+            ) from e
 
         # Validate required configuration keys
         if 'api_id' not in config:
@@ -130,11 +129,11 @@ class TelegramManagerClient(TelegramUploadClient, TelegramDownloadClient):
         try:
             return super().start(phone=phone, password=password, bot_token=bot_token, force_sms=force_sms,
                                  first_name=first_name, last_name=last_name, max_attempts=max_attempts)
-        except ApiIdInvalidError:
-            raise InvalidApiFileError(self.config_file)
+        except ApiIdInvalidError as e:
+            raise InvalidApiFileError(self.config_file) from e
 
     @cached_property
-    def me(self) -> Union[User, InputPeerUser]:
+    def me(self) -> User | InputPeerUser:
         return self.get_me()
 
     @property

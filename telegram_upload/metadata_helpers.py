@@ -6,13 +6,12 @@ media formats, handling edge cases like MKV files that use private
 attributes in the hachoir library.
 """
 import logging
-from typing import Any, Optional
-
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-def get_video_metadata_stream(metadata: Any) -> Optional[Any]:
+def get_video_metadata_stream(metadata: Any) -> Any | None:
     """
     Safely extract video metadata stream from file metadata.
 

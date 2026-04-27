@@ -1,7 +1,7 @@
 import unittest
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
-from telegram_upload.config import default_config, CONFIG_FILE
+from telegram_upload.config import CONFIG_FILE, default_config
 
 
 class TestDefaultConfig(unittest.TestCase):

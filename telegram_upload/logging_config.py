@@ -7,17 +7,15 @@ levels and formatting.
 import logging
 import os
 import sys
-from typing import Optional
-
 
 DEFAULT_LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 DEFAULT_LOG_LEVEL = logging.INFO
 
 
 def setup_logging(
-    level: Optional[int] = None,
-    log_file: Optional[str] = None,
-    format_string: Optional[str] = None
+    level: int | None = None,
+    log_file: str | None = None,
+    format_string: str | None = None
 ) -> logging.Logger:
     """
     Setup logging configuration for telegram-upload.

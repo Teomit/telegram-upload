@@ -1,16 +1,22 @@
 import json
 import unittest
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import MagicMock, mock_open, patch
 
 import socks
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 
 from telegram_upload.client import TelegramManagerClient
-from telegram_upload.client.telegram_manager_client import phone_match, parse_proxy_string, USER_MAX_FILE_SIZE, \
-    BOT_USER_MAX_FILE_SIZE, PREMIUM_USER_MAX_FILE_SIZE, USER_MAX_CAPTION_LENGTH, PREMIUM_USER_MAX_CAPTION_LENGTH
+from telegram_upload.client.telegram_manager_client import (
+    BOT_USER_MAX_FILE_SIZE,
+    PREMIUM_USER_MAX_CAPTION_LENGTH,
+    PREMIUM_USER_MAX_FILE_SIZE,
+    USER_MAX_CAPTION_LENGTH,
+    USER_MAX_FILE_SIZE,
+    parse_proxy_string,
+    phone_match,
+)
 from telegram_upload.config import SESSION_FILE
 from telegram_upload.exceptions import TelegramProxyError
-
 
 CONFIG_DATA = {'api_hash': '', 'api_id': ''}
 
