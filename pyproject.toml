@@ -78,6 +78,16 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B017", "SIM"]    # tests can use bare excepts/asserts liberally
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+filterwarnings = [
+    "ignore::pytest.PytestCollectionWarning",
+    "ignore::ResourceWarning",
+]
+# `test_caption_format` is a click.Command, not a test — pytest tries to collect
+# it because of the `test_` prefix. The filterwarnings above silences the warning
+# but the actual command is also flagged with __test__ = False in source.
+
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true

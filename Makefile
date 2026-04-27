@@ -23,11 +23,10 @@ lint:
 	ruff format --check .
 
 test:
-	python -m unittest discover
+	pytest
 
 coverage:
-	coverage run -m unittest discover
-	coverage report -m
+	pytest --cov=telegram_upload --cov-report=term-missing
 
 build: clean
 	python -m build

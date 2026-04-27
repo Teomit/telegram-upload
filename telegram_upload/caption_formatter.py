@@ -338,6 +338,11 @@ def test_caption_format(file: str, caption_format: str) -> None:
     print(formatter.format(caption_format, file=file_path, now=datetime.datetime.now()))
 
 
+# Tell pytest: this is a click.Command instance, not a test. Without it
+# pytest tries to collect it because of the `test_` name prefix and warns.
+test_caption_format.__test__ = False  # type: ignore[attr-defined]
+
+
 if __name__ == '__main__':
     # Testing mode
     test_caption_format()
