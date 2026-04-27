@@ -111,48 +111,55 @@ def _media_kind(file_path: str, force_file: bool) -> str:
     return {"video": "video", "image": "photo", "audio": "audio"}.get(mime, "document")
 
 
+def _load_config(config_file: str) -> dict:
+    """Read and validate the JSON config file. Raises TelegramUploadError on parse
+    issues, InvalidApiFileError when api_id/api_hash are missing."""
+    try:
+        with open(config_file, encoding="utf-8") as f:
+            config = json.load(f)
+    except FileNotFoundError as e:
+        raise TelegramUploadError(
+            f"Configuration file not found: {config_file}\n"
+            f"Please create a config file or run telegram-upload with --config option."
+        ) from e
+    except json.JSONDecodeError as e:
+        raise TelegramUploadError(
+            f"Invalid JSON in configuration file {config_file}:\n"
+            f"  Line {e.lineno}, Column {e.colno}: {e.msg}"
+        ) from e
+    except OSError as e:
+        raise TelegramUploadError(f"Failed to read configuration file {config_file}: {e}") from e
+
+    if "api_id" not in config:
+        raise InvalidApiFileError(f"Missing 'api_id' in configuration file: {config_file}")
+    if "api_hash" not in config:
+        raise InvalidApiFileError(f"Missing 'api_hash' in configuration file: {config_file}")
+    return config
+
+
+def _resolve_session(session_value: str | None) -> tuple[str, str]:
+    """Split a session path into (workdir, name) for pyrogram.Client. Creates workdir."""
+    session_path = os.path.expanduser(session_value or SESSION_FILE)
+    workdir = os.path.dirname(session_path) or "."
+    os.makedirs(workdir, exist_ok=True)
+    name = os.path.basename(session_path) or "telegram-upload"
+    return workdir, name
+
+
 class PyrogramBackend:
     """TelegramBackend implementation backed by pyrogram (or pyrofork)."""
 
     def __init__(self, config_file: str, proxy: str | None = None, **kwargs) -> None:
         self.config_file = config_file
-        try:
-            with open(config_file, encoding="utf-8") as f:
-                config = json.load(f)
-        except FileNotFoundError as e:
-            raise TelegramUploadError(
-                f"Configuration file not found: {config_file}\n"
-                f"Please create a config file or run telegram-upload with --config option."
-            ) from e
-        except json.JSONDecodeError as e:
-            raise TelegramUploadError(
-                f"Invalid JSON in configuration file {config_file}:\n"
-                f"  Line {e.lineno}, Column {e.colno}: {e.msg}"
-            ) from e
-        except OSError as e:
-            raise TelegramUploadError(f"Failed to read configuration file {config_file}: {e}") from e
-
-        if "api_id" not in config:
-            raise InvalidApiFileError(f"Missing 'api_id' in configuration file: {config_file}")
-        if "api_hash" not in config:
-            raise InvalidApiFileError(f"Missing 'api_hash' in configuration file: {config_file}")
-
+        config = _load_config(config_file)
         proxy = proxy if proxy is not None else _get_proxy_environment_variable()
-        proxy_dict = _parse_proxy(proxy)
-
-        session_path = config.get("session", SESSION_FILE)
-        # Pyrogram uses workdir + name; split to match.
-        session_path = os.path.expanduser(session_path)
-        workdir = os.path.dirname(session_path) or "."
-        os.makedirs(workdir, exist_ok=True)
-        name = os.path.basename(session_path) or "telegram-upload"
-
+        workdir, name = _resolve_session(config.get("session"))
         self._client = Client(
             name=name,
             api_id=int(config["api_id"]),
             api_hash=config["api_hash"],
             workdir=workdir,
-            proxy=proxy_dict,
+            proxy=_parse_proxy(proxy),
             **kwargs,
         )
 
@@ -212,19 +219,19 @@ class PyrogramBackend:
                     try:
                         os.remove(thumb)
                     except OSError as e:
-                        click.echo(f'Warning: failed to delete thumb "{thumb}": {e}', err=True)
+                        logger.warning('failed to delete thumb "%s": %s', thumb, e)
             if message is None:
-                click.echo(f'Failed to upload "{file.file_name}"', err=True)
+                logger.error('Failed to upload "%s"', file.file_name)
                 continue
             if print_file_id:
                 file_id = _extract_file_id(message)
-                click.echo(f'Uploaded successfully "{file.file_name}" (file_id {file_id})')
+                logger.info('Uploaded successfully "%s" (file_id %s)', file.file_name, file_id)
             if delete_on_success:
-                click.echo(f'Deleting "{file.file_name}"')
+                logger.info('Deleting "%s"', file.file_name)
                 try:
                     os.remove(file.path)
                 except OSError as e:
-                    click.echo(f'Warning: failed to delete file "{file.path}": {e}', err=True)
+                    logger.warning('failed to delete file "%s": %s', file.path, e)
             for dst in forward:
                 self._client.forward_messages(dst, entity, message.id)
             sent.append(message)
@@ -281,29 +288,34 @@ class PyrogramBackend:
                 try:
                     os.remove(file.path)
                 except OSError as e:
-                    click.echo(f'Warning: failed to delete file "{file.path}": {e}', err=True)
+                    logger.warning('failed to delete file "%s": %s', file.path, e)
 
-    def _send_one(self, entity, file, thumb, retries: int = RETRIES):
-        """Send one file using the appropriate pyrogram method."""
+    def _send_one(self, entity, file, thumb):
+        """Send one file. Retries on FloodWait/RPC; iterative, not recursive."""
         kind = _media_kind(file.path, file.force_file)
         progress, finish = _make_progress("Uploading", file.file_name, file.file_size)
+        message = None
         try:
-            try:
-                message = self._dispatch_send(entity, file, kind, thumb, progress)
-            except FloodWait as e:
-                wait = int(getattr(e, "value", 0) or 0)
-                click.echo(f"FloodWait. Sleeping {wait}s.", err=True)
-                time.sleep(wait)
-                return self._send_one(entity, file, thumb, retries)
-            except RPCError as e:
-                if retries > 0:
-                    click.echo(f'"{file.file_name}" failed: {e}. Retrying...', err=True)
-                    return self._send_one(entity, file, thumb, retries - 1)
-                click.echo(f'"{file.file_name}" failed: {e}. Giving up.', err=True)
-                return None
+            for attempt in range(RETRIES + 1):
+                try:
+                    message = self._dispatch_send(entity, file, kind, thumb, progress)
+                    break
+                except FloodWait as e:
+                    wait = int(getattr(e, "value", 0) or 0)
+                    logger.warning("FloodWait. Sleeping %ss.", wait)
+                    time.sleep(wait)
+                    continue  # FloodWait doesn't consume a retry
+                except RPCError as e:
+                    if attempt < RETRIES:
+                        logger.warning('"%s" failed: %s. Retrying (%d/%d)...',
+                                       file.file_name, e, attempt + 1, RETRIES)
+                        continue
+                    logger.error('"%s" failed: %s. Giving up.', file.file_name, e)
+                    return None
         finally:
             finish()
-        # Verify size after upload.
+        if message is None:
+            return None
         remote_size = _remote_size(message)
         if remote_size is not None and remote_size != file.file_size:
             raise TelegramUploadDataLoss(

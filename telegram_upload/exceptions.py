@@ -1,5 +1,4 @@
-
-"""Exceptions for telegram-upload."""
+"""Exceptions and the top-level CLI exception handler."""
 import sys
 
 import click
@@ -19,10 +18,10 @@ class TelegramUploadError(Exception):
     body = ''
     error_code = 1
 
-    def __init__(self, extra_body=''):
+    def __init__(self, extra_body: str = ''):
         self.extra_body = extra_body
 
-    def __str__(self):
+    def __str__(self) -> str:
         msg = self.__class__.__name__
         if self.body:
             msg += f': {self.body}'
@@ -36,7 +35,7 @@ class MissingFileError(TelegramUploadError):
 
 
 class InvalidApiFileError(TelegramUploadError):
-    def __init__(self, config_file, extra_body=''):
+    def __init__(self, config_file: str, extra_body: str = ''):
         self.config_file = config_file
         super().__init__(extra_body)
 
@@ -57,11 +56,8 @@ class TelegramProxyError(TelegramUploadError):
     error_code = 30
 
 
-class TelegramEnvironmentError(TelegramUploadError):
-    error_code = 31
-
-
 def catch(fn):
+    """Decorate a CLI command so TelegramUploadError → exit code, not traceback."""
     def wrap(*args, **kwargs):
         try:
             return fn(*args, **kwargs)
@@ -71,5 +67,5 @@ def catch(fn):
             return catch(fn)(*args, **kwargs)
         except TelegramUploadError as e:
             sys.stderr.write(f'[Error] telegram-upload Exception:\n{e}\n')
-            exit(e.error_code)
+            sys.exit(e.error_code)
     return wrap
