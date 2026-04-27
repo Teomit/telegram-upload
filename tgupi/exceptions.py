@@ -3,7 +3,7 @@ import sys
 
 import click
 
-from telegram_upload.config import prompt_config
+from tgupi.config import prompt_config
 
 
 class ThumbError(Exception):
@@ -66,6 +66,6 @@ def catch(fn):
             prompt_config(e.config_file)
             return catch(fn)(*args, **kwargs)
         except TelegramUploadError as e:
-            sys.stderr.write(f'[Error] telegram-upload Exception:\n{e}\n')
+            sys.stderr.write(f'[Error] tgupi Exception:\n{e}\n')
             sys.exit(e.error_code)
     return wrap

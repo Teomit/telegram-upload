@@ -10,8 +10,8 @@ import platform
 import subprocess
 import tempfile
 
-from telegram_upload._media import probe
-from telegram_upload.exceptions import ThumbVideoError
+from tgupi._media import probe
+from tgupi.exceptions import ThumbVideoError
 
 logger = logging.getLogger(__name__)
 

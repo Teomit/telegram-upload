@@ -2,25 +2,25 @@
 Usage
 #####
 
-.. click:: telegram_upload.management:upload
-   :prog: telegram-upload
+.. click:: tgupi.management:upload
+   :prog: tgupi
    :show-nested:
 
 
-.. click:: telegram_upload.management:download
+.. click:: tgupi.management:download
    :prog: telegram-download
    :show-nested:
 
 Set recipient or sender
 =======================
-By default when using *telegram-upload* without specifying the recipient or sender, *telegram-upload* will use your
-personal chat. This is especially useful because you can use it to upload files from telegram-upload and then forward
+By default when using *tgupi* without specifying the recipient or sender, *tgupi* will use your
+personal chat. This is especially useful because you can use it to upload files from tgupi and then forward
 them from your personal chat to as many groups as you like. However you can define the destination. For file upload the
 argument is ``--to <entity>``:
 
 .. code-block::
 
-    ~ $ telegram-upload --to <entity> <file 1>[ <file 2>]
+    ~ $ tgupi --to <entity> <file 1>[ <file 2>]
 
 You can *download files* from a specific chat using the ``--from <entity>`` parameter:
 
@@ -42,7 +42,7 @@ Interactive mode
 Use the ``-i`` (or ``--interactive``) option to activate the **interactive mode** to choose the dialog (chat,
 channel...) and the files. To **upload files** using interactive mode:
 
-    $ telegram-upload -i
+    $ tgupi -i
 
 To **download files** using interactive mode:
 
@@ -108,13 +108,13 @@ installing ``pysocks``. To install it::
 
 To define the proxy you can use the ``--proxy`` parameter::
 
-    $ telegram-upload image.jpg --proxy mtproxy://secret@proxy.my.site:443
+    $ tgupi image.jpg --proxy mtproxy://secret@proxy.my.site:443
 
 Or you can define one of these variables: ``TELEGRAM_UPLOAD_PROXY``, ``HTTPS_PROXY`` or ``HTTP_PROXY``. To define the
 environment variable from terminal::
 
     $ export HTTPS_PROXY=socks5://user:pass@proxy.my.site:1080
-    $ telegram-upload image.jpg
+    $ tgupi image.jpg
 
 
 Parameter ``--proxy`` has higher priority over environment variables. The environment variable
@@ -122,7 +122,7 @@ Parameter ``--proxy`` has higher priority over environment variables. The enviro
 the OS proxy::
 
     $ export TELEGRAM_UPLOAD_PROXY=
-    $ telegram-upload image.jpg
+    $ tgupi image.jpg
 
 The syntax for **mproto proxy** is::
 
@@ -148,22 +148,22 @@ Caption message
 ===============
 You can add a caption message to the file to upload using the ``--caption`` parameter::
 
-    $ telegram-upload image.jpg --caption "This is a caption"
+    $ tgupi image.jpg --caption "This is a caption"
 
 This parameter support variables using the ``{}`` syntax. For example::
 
-    $ telegram-upload image.jpg --caption "This is a caption for {file.stem.capitalize}"
+    $ tgupi image.jpg --caption "This is a caption for {file.stem.capitalize}"
 
 The ``{file}`` variable is the file path. The ``{file.stem}`` variable is the file name without extension. The
 ``{file.stem.capitalize}`` variable is the file name without extension with the first letter in uppercase. The
 ``{file}`` variable has attributes for get info about the file like their size, their creation date, their checksums
 (md5, sha1, sha256...), their media info (width, height, artist...) and more. For example::
 
-    $ telegram-upload image.jpg --caption "{file.media.width}x{file.media.height}px {file.media.duration.for_humans}"
+    $ tgupi image.jpg --caption "{file.media.width}x{file.media.height}px {file.media.duration.for_humans}"
 
 If you want to use the ``{}`` syntax in the caption message, you can escape it using the brace twice. For example::
 
-    $ telegram-upload image.jpg --caption "This is a caption with {{}}"
+    $ tgupi image.jpg --caption "This is a caption with {{}}"
 
 For get more info about the variables, see the :ref:`caption_format` section.
 
@@ -172,14 +172,14 @@ Split files
 By default, when trying to **upload** a file larger than the supported size by Telegram, an error will occur. However,
 *Telegram-upload* has different policies for large files using the ``--large-files`` parameter:
 
-* ``fail`` (default): The execution of telegram-upload is stopped and the uploads are not continued.
+* ``fail`` (default): The execution of tgupi is stopped and the uploads are not continued.
 * ``split``: The files are split as parts. For example *myfile.tar.00*, *myfile.tar.01*...
 
 The syntax is:
 
 .. code-block::
 
-    ~$ telegram-upload --large-files <fail|split>
+    ~$ tgupi --large-files <fail|split>
 
 To join the split files using the *split* option, you can use in GNU/Linux:
 

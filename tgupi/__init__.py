@@ -1,5 +1,5 @@
 
-"""Top-level package for telegram-upload."""
+"""Top-level package for tgupi."""
 
 __author__ = """Nekmo"""
 __email__ = 'contacto@nekmo.com'

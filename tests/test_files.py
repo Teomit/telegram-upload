@@ -2,9 +2,9 @@ import os
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
-from telegram_upload._backend._pyrogram._backend import USER_MAX_FILE_SIZE
-from telegram_upload.exceptions import TelegramInvalidFile
-from telegram_upload.upload_files import (
+from tgupi._backend._pyrogram._backend import USER_MAX_FILE_SIZE
+from tgupi.exceptions import TelegramInvalidFile
+from tgupi.upload_files import (
     NoDirectoriesFiles,
     NoLargeFiles,
     RecursiveFiles,
@@ -14,13 +14,13 @@ from telegram_upload.upload_files import (
 
 
 class TestRecursiveFiles(unittest.TestCase):
-    @patch('telegram_upload.upload_files.scantree', return_value=[])
-    @patch('telegram_upload.upload_files.os.path.isdir', return_value=False)
+    @patch('tgupi.upload_files.scantree', return_value=[])
+    @patch('tgupi.upload_files.os.path.isdir', return_value=False)
     def test_one_file(self, m1, m2):
         self.assertEqual(list(RecursiveFiles(MagicMock(), ['foo'])), ['foo'])
 
-    @patch('telegram_upload.upload_files.scantree')
-    @patch('telegram_upload.upload_files.os.path.isdir', return_value=True)
+    @patch('tgupi.upload_files.scantree')
+    @patch('tgupi.upload_files.os.path.isdir', return_value=True)
     def test_directory(self, m1, m2):
         directory = Mock()
         directory.is_dir.side_effect = [True, False]
@@ -32,24 +32,24 @@ class TestRecursiveFiles(unittest.TestCase):
 
 
 class TestNoDirectoriesFiles(unittest.TestCase):
-    @patch('telegram_upload.upload_files.scantree', return_value=[])
-    @patch('telegram_upload.upload_files.os.path.isdir', return_value=False)
+    @patch('tgupi.upload_files.scantree', return_value=[])
+    @patch('tgupi.upload_files.os.path.isdir', return_value=False)
     def test_one_file(self, m1, m2):
         self.assertEqual(list(NoDirectoriesFiles(MagicMock(), ['foo'])), ['foo'])
 
-    @patch('telegram_upload.upload_files.os.path.isdir', return_value=True)
+    @patch('tgupi.upload_files.os.path.isdir', return_value=True)
     def test_directory(self, m):
         with self.assertRaises(TelegramInvalidFile):
             next(NoDirectoriesFiles(MagicMock(), ['foo']))
 
 
 class TestNoLargeFiles(unittest.TestCase):
-    @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE - 1)
-    @patch('telegram_upload.upload_files.File')
+    @patch('tgupi.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE - 1)
+    @patch('tgupi.upload_files.File')
     def test_small_file(self, m1, m2):
         self.assertEqual(len(list(NoLargeFiles(MagicMock(max_file_size=USER_MAX_FILE_SIZE), ['foo']))), 1)
 
-    @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE + 1)
+    @patch('tgupi.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE + 1)
     def test_big_file(self, m):
         with self.assertRaises(TelegramInvalidFile):
             next(NoLargeFiles(MagicMock(max_file_size=1024 ** 3), ['foo']))
@@ -72,14 +72,14 @@ class TestSplitFile(unittest.TestCase):
 
 
 class TestSplitFiles(unittest.TestCase):
-    @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE - 1)
-    @patch('telegram_upload.upload_files.File')
+    @patch('tgupi.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE - 1)
+    @patch('tgupi.upload_files.File')
     def test_small_file(self, m1, m2):
         self.assertEqual(len(list(SplitFiles(MagicMock(max_file_size=USER_MAX_FILE_SIZE), ['foo']))), 1)
 
-    @patch('telegram_upload.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE + 1000)
-    @patch('telegram_upload.upload_files.SplitFile.__init__', return_value=None)
-    @patch('telegram_upload.upload_files.SplitFile.seek')
+    @patch('tgupi.upload_files.os.path.getsize', return_value=USER_MAX_FILE_SIZE + 1000)
+    @patch('tgupi.upload_files.SplitFile.__init__', return_value=None)
+    @patch('tgupi.upload_files.SplitFile.seek')
     def test_big_file(self, m_getsize, m_init, m_seek):
         mock_client = MagicMock(max_file_size=USER_MAX_FILE_SIZE)
         files = list(SplitFiles(mock_client, ['foo']))

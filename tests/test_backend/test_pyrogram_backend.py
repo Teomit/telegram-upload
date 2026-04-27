@@ -2,8 +2,8 @@ import json
 import unittest
 from unittest.mock import MagicMock, mock_open, patch
 
-from telegram_upload._backend._pyrogram._adapter import PyrogramMessageAdapter
-from telegram_upload._backend._pyrogram._backend import (
+from tgupi._backend._pyrogram._adapter import PyrogramMessageAdapter
+from tgupi._backend._pyrogram._backend import (
     BOT_USER_MAX_FILE_SIZE,
     PREMIUM_USER_MAX_CAPTION_LENGTH,
     PREMIUM_USER_MAX_FILE_SIZE,
@@ -14,7 +14,7 @@ from telegram_upload._backend._pyrogram._backend import (
     _media_kind,
     _parse_proxy,
 )
-from telegram_upload.exceptions import InvalidApiFileError, TelegramProxyError, TelegramUploadError
+from tgupi.exceptions import InvalidApiFileError, TelegramProxyError, TelegramUploadError
 
 CONFIG_DATA = {"api_hash": "h", "api_id": 1}
 
@@ -58,7 +58,7 @@ class TestMediaKind(unittest.TestCase):
 
 class TestPyrogramBackendInit(unittest.TestCase):
     @patch("builtins.open", mock_open(read_data=json.dumps(CONFIG_DATA)))
-    @patch("telegram_upload._backend._pyrogram._backend.Client")
+    @patch("tgupi._backend._pyrogram._backend.Client")
     def test_init_basic(self, mock_client_cls):
         backend = PyrogramBackend("config.json")
         mock_client_cls.assert_called_once()
@@ -111,8 +111,8 @@ class TestMaxFileSize(unittest.TestCase):
 
 
 class TestProxyEnv(unittest.TestCase):
-    @patch.dict("os.environ", {"TELEGRAM_UPLOAD_PROXY": "socks5://h:1080"}, clear=True)
-    def test_telegram_upload_proxy(self):
+    @patch.dict("os.environ", {"TGUPI_PROXY": "socks5://h:1080"}, clear=True)
+    def test_tgupi_proxy(self):
         self.assertEqual("socks5://h:1080", _get_proxy_environment_variable())
 
     @patch.dict("os.environ", {}, clear=True)

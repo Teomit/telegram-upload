@@ -1,14 +1,14 @@
-Welcome to telegram-upload's documentation!
+Welcome to tgupi's documentation!
 ===========================================
 Telegram-upload uses your personal Telegram account to upload and download files up to 4 GiB (2 GiB for free users).
 Turn Telegram into your personal cloud!
 
 
-To **install** telegram-upload, run this command in your terminal:
+To **install** tgupi, run this command in your terminal:
 
 .. code-block:: console
 
-    $ pip install -U telegram-upload
+    $ pip install -U tgupi
 
 
 Contents

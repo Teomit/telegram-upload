@@ -15,7 +15,7 @@ For example:
 
 .. code-block:: bash
 
-    $ telegram-upload --caption "This is a file with name {file.name}" file.txt
+    $ tgupi --caption "This is a file with name {file.name}" file.txt
 
 The latest caption message will be *"This is a file with name file.txt"*. In case of using a invalid variable, the
 variable will be keep without replacing. The rest of variables will be replaced correctly. In case of a sintax error
@@ -29,7 +29,7 @@ For testing the caption variables before sending the file, you can use the next 
 
 .. code-block:: bash
 
-    $ python -m telegram_upload.caption_formatter file.txt "{file.absolute}"
+    $ python -m tgupi.caption_formatter file.txt "{file.absolute}"
 
 We recommend you to use the latest command to test the caption variables before sending the file.
 

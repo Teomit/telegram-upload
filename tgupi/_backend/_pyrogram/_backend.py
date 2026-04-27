@@ -21,10 +21,10 @@ from pyrogram.types import (
     InputMediaVideo,
 )
 
-from telegram_upload._backend._pyrogram._adapter import PyrogramMessageAdapter
-from telegram_upload._media import probe
-from telegram_upload.config import SESSION_FILE
-from telegram_upload.exceptions import (
+from tgupi._backend._pyrogram._adapter import PyrogramMessageAdapter
+from tgupi._media import probe
+from tgupi.config import SESSION_FILE
+from tgupi.exceptions import (
     InvalidApiFileError,
     TelegramProxyError,
     TelegramUploadDataLoss,
@@ -39,7 +39,7 @@ PREMIUM_USER_MAX_FILE_SIZE = 4194304000  # 4GB
 USER_MAX_CAPTION_LENGTH = 1024
 PREMIUM_USER_MAX_CAPTION_LENGTH = 2048
 PROXY_ENVIRONMENT_VARIABLE_NAMES = (
-    "TELEGRAM_UPLOAD_PROXY",
+    "TGUPI_PROXY",
     "HTTPS_PROXY",
     "HTTP_PROXY",
 )
@@ -120,7 +120,7 @@ def _load_config(config_file: str) -> dict:
     except FileNotFoundError as e:
         raise TelegramUploadError(
             f"Configuration file not found: {config_file}\n"
-            f"Please create a config file or run telegram-upload with --config option."
+            f"Please create a config file or run tgupi with --config option."
         ) from e
     except json.JSONDecodeError as e:
         raise TelegramUploadError(
@@ -142,7 +142,7 @@ def _resolve_session(session_value: str | None) -> tuple[str, str]:
     session_path = os.path.expanduser(session_value or SESSION_FILE)
     workdir = os.path.dirname(session_path) or "."
     os.makedirs(workdir, exist_ok=True)
-    name = os.path.basename(session_path) or "telegram-upload"
+    name = os.path.basename(session_path) or "tgupi"
     return workdir, name
 
 
@@ -236,7 +236,7 @@ class PyrogramBackend:
                 self._client.forward_messages(dst, entity, message.id)
             sent.append(message)
         if not any_files:
-            from telegram_upload.exceptions import MissingFileError
+            from tgupi.exceptions import MissingFileError
             raise MissingFileError("Files do not exist.")
         return sent
 
@@ -372,8 +372,8 @@ class PyrogramBackend:
         download_files: Iterable,
         delete_on_success: bool = False,
     ) -> None:
-        from telegram_upload.exceptions import TelegramUploadNoSpaceError
-        from telegram_upload.utils import free_disk_usage, sizeof_fmt
+        from tgupi.exceptions import TelegramUploadNoSpaceError
+        from tgupi.utils import free_disk_usage, sizeof_fmt
 
         for download_file in download_files:
             if download_file.size > free_disk_usage():

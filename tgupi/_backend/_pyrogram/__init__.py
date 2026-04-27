@@ -13,6 +13,6 @@ Implementation note — fork choice:
     raises ``RuntimeError`` on Python 3.14. ``pyrofork`` ships the bug-fix.
     Both packages import as ``pyrogram`` — code is unchanged.
 """
-from telegram_upload._backend._pyrogram._backend import PyrogramBackend, get_message_file_attribute
+from tgupi._backend._pyrogram._backend import PyrogramBackend, get_message_file_attribute
 
 __all__ = ["PyrogramBackend", "get_message_file_attribute"]

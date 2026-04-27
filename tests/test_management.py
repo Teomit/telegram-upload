@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
 
-from telegram_upload.management import download, get_file_display_name, upload
+from tgupi.management import download, get_file_display_name, upload
 
 directory = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,8 +26,8 @@ class TestGetFileDisplayName(unittest.TestCase):
 
 class TestUpload(unittest.TestCase):
 
-    @patch('telegram_upload.management.default_config')
-    @patch('telegram_upload.management.TelegramManagerClient')
+    @patch('tgupi.management.default_config')
+    @patch('tgupi.management.TelegramManagerClient')
     def test_upload(self, mock_client: MagicMock, _: MagicMock):
         mock_client.return_value.max_caption_length = 200
         mock_client.return_value.max_file_size = 1024 * 1024 * 1024
@@ -38,8 +38,8 @@ class TestUpload(unittest.TestCase):
         mock_client.assert_called_once()
         mock_client.return_value.send_files.assert_called_once()
 
-    @patch('telegram_upload.management.default_config')
-    @patch('telegram_upload.management.TelegramManagerClient')
+    @patch('tgupi.management.default_config')
+    @patch('tgupi.management.TelegramManagerClient')
     def test_exclusive(self, m1, m2):
         runner = CliRunner()
         result = runner.invoke(upload, ['missing_file.txt', '--thumbnail-file', 'cara128.png', '--no-thumbnail'])
@@ -48,8 +48,8 @@ class TestUpload(unittest.TestCase):
 
 
 class TestDownload(unittest.TestCase):
-    @patch('telegram_upload.management.default_config')
-    @patch('telegram_upload.management.TelegramManagerClient')
+    @patch('tgupi.management.default_config')
+    @patch('tgupi.management.TelegramManagerClient')
     def test_download(self, m1, m2):
         runner = CliRunner()
         result = runner.invoke(download, [])

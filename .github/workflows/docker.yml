@@ -16,7 +16,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: |
-            nekmo/telegram-upload
+            nekmo/tgupi
           tags: |
             type=schedule
             type=ref,event=branch

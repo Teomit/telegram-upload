@@ -3,15 +3,15 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "telegram-upload"
-description = "Upload (and download) files to Telegram up to 4 GiB using your account."
+name = "tgupi"
+description = "Upload and download files via your personal Telegram account (up to 4 GiB per file)."
 readme = "README.rst"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
-    { name = "Nekmo", email = "contacto@nekmo.com" },
+    { name = "Teomit" },
 ]
-keywords = ["telegram-upload", "telegram", "upload", "video"]
+keywords = ["telegram", "upload", "download", "pyrogram", "tgupi"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: MIT License",
@@ -38,19 +38,17 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/Nekmo/telegram-upload/"
-Source = "https://github.com/Nekmo/telegram-upload/"
-Documentation = "https://docs.nekmo.org/telegram-upload/"
+Homepage = "https://github.com/Teomit/tgupi/"
+Source = "https://github.com/Teomit/tgupi/"
 
 [project.scripts]
-telegram-upload = "telegram_upload.management:upload_cli"
-telegram-download = "telegram_upload.management:download_cli"
+tgupi = "tgupi.management:tgupi_cli"
 
 [tool.setuptools.packages.find]
-include = ["telegram_upload*"]
+include = ["tgupi*"]
 
 [tool.setuptools.dynamic]
-version = { attr = "telegram_upload.__version__" }
+version = { attr = "tgupi.__version__" }
 dependencies = { file = ["requirements.txt"] }
 
 [tool.ruff]
@@ -91,7 +89,7 @@ filterwarnings = [
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true
-files = ["telegram_upload"]
+files = ["tgupi"]
 # pyrogram wraps async methods in sync stubs at import time (sync.py); mypy
 # can't see that, so calling Client.send_document is reported as
 # `unused-coroutine`. Disable that one check globally rather than scattering
@@ -99,14 +97,14 @@ files = ["telegram_upload"]
 disable_error_code = ["unused-coroutine"]
 
 [[tool.mypy.overrides]]
-module = "telegram_upload._backend._pyrogram._backend"
+module = "tgupi._backend._pyrogram._backend"
 # Pyrogram InputMedia* are siblings, not subclasses of a common Input type;
 # mypy infers list[InputMediaVideo] from the first append and complains. The
 # code is correct at runtime — pyrogram dispatches by isinstance.
 disable_error_code = ["arg-type", "list-item"]
 
 [tool.coverage.run]
-source = ["telegram_upload"]
+source = ["tgupi"]
 branch = true
 
 [tool.bumpversion]
@@ -115,7 +113,7 @@ commit = true
 tag = true
 
 [[tool.bumpversion.files]]
-filename = "telegram_upload/__init__.py"
+filename = "tgupi/__init__.py"
 search = "__version__ = '{current_version}'"
 replace = "__version__ = '{new_version}'"
 

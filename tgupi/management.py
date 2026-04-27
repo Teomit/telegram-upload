@@ -1,14 +1,14 @@
-"""Console script for telegram-upload."""
+"""Console script for tgupi."""
 import logging
 
 import click
 
-from telegram_upload._backend import TelegramManagerClient
-from telegram_upload.config import CONFIG_FILE, default_config
-from telegram_upload.download_files import JoinDownloadSplitFiles, KeepDownloadSplitFiles
-from telegram_upload.exceptions import catch
-from telegram_upload.logging_config import setup_logging
-from telegram_upload.upload_files import NoDirectoriesFiles, NoLargeFiles, RecursiveFiles, SplitFiles, is_valid_file
+from tgupi._backend import TelegramManagerClient
+from tgupi.config import CONFIG_FILE, default_config
+from tgupi.download_files import JoinDownloadSplitFiles, KeepDownloadSplitFiles
+from tgupi.exceptions import catch
+from tgupi.logging_config import setup_logging
+from tgupi.upload_files import NoDirectoriesFiles, NoLargeFiles, RecursiveFiles, SplitFiles, is_valid_file
 
 DIRECTORY_MODES = {
     'fail': NoDirectoriesFiles,
@@ -209,22 +209,24 @@ def download(from_, config, delete_on_success, proxy, split_files, log_level):
     client.download_files(from_, download_files, delete_on_success)
 
 
+@click.group(context_settings={"help_option_names": ["-h", "--help"]})
+@click.version_option(package_name="tgupi")
+def cli() -> None:
+    """tgupi — upload/download files via your personal Telegram account."""
+
+
+cli.add_command(upload)
+cli.add_command(download)
+
+# Top-level entry point (registered as `tgupi` in pyproject.toml).
+tgupi_cli = catch(cli)
+
+# Backwards-compatible single-command entry points. Useful if a script
+# elsewhere still calls `tgupi-upload file.mp4` directly. They also live in
+# pyproject.toml [project.scripts].
 upload_cli = catch(upload)
 download_cli = catch(download)
 
 
 if __name__ == '__main__':
-    import re
-    import sys
-
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-    commands = {'upload': upload_cli, 'download': download_cli}
-    if len(sys.argv) < 2:
-        sys.stderr.write(f'A command is required. Available commands: {", ".join(commands)}\n')
-        sys.exit(1)
-    if sys.argv[1] not in commands:
-        sys.stderr.write(f'{sys.argv[1]} is an invalid command. Valid commands: {", ".join(commands)}\n')
-        sys.exit(1)
-    fn = commands[sys.argv[1]]
-    sys.argv = [sys.argv[0]] + sys.argv[2:]
-    sys.exit(fn())
+    tgupi_cli()

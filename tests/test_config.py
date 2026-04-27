@@ -1,19 +1,19 @@
 import unittest
 from unittest.mock import mock_open, patch
 
-from telegram_upload.config import CONFIG_FILE, default_config
+from tgupi.config import CONFIG_FILE, default_config
 
 
 class TestDefaultConfig(unittest.TestCase):
-    @patch('telegram_upload.config.os.path.lexists', return_value=True)
+    @patch('tgupi.config.os.path.lexists', return_value=True)
     def test_exists(self, m):
         self.assertEqual(default_config(), CONFIG_FILE)
         self.assertEqual(m.call_count, 1)
 
     @patch('builtins.open', mock_open())
-    @patch('telegram_upload.config.os')
-    @patch('telegram_upload.config.click')
-    @patch('telegram_upload.config.json')
+    @patch('tgupi.config.os')
+    @patch('tgupi.config.click')
+    @patch('tgupi.config.json')
     def test_create(self, m_json, m_click, m_os):
         m_os.path.lexists.return_value = False
         m_click.prompt.side_effect = ['api_id', 'api_hash']

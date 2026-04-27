@@ -26,7 +26,7 @@ test:
 	pytest
 
 coverage:
-	pytest --cov=telegram_upload --cov-report=term-missing
+	pytest --cov=tgupi --cov-report=term-missing
 
 build: clean
 	python -m build

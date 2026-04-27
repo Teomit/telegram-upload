@@ -13,8 +13,8 @@ from typing import Any
 
 import click
 
-from telegram_upload._media import MediaInfo, probe
-from telegram_upload.constants import DURATION_LAST_SEPARATOR, DURATION_SEPARATOR
+from tgupi._media import MediaInfo, probe
+from tgupi.constants import DURATION_LAST_SEPARATOR, DURATION_SEPARATOR
 
 logger = logging.getLogger(__name__)
 

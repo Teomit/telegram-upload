@@ -8,10 +8,10 @@ without touching ``upload_files``, ``download_files`` or ``management``.
 Anything below this package talks only to the methods listed in
 ``_protocol.py``.
 """
-from telegram_upload._backend._pyrogram import PyrogramBackend, get_message_file_attribute
+from tgupi._backend._pyrogram import PyrogramBackend, get_message_file_attribute
 
 # Public alias kept stable: callers (management, tests) write
-# ``from telegram_upload._backend import TelegramManagerClient``.
+# ``from tgupi._backend import TelegramManagerClient``.
 TelegramManagerClient = PyrogramBackend
 
 

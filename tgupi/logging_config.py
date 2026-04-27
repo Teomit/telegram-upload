@@ -1,5 +1,5 @@
 """
-Logging configuration for telegram-upload.
+Logging configuration for tgupi.
 
 This module provides centralized logging setup with configurable
 levels and formatting.
@@ -18,44 +18,44 @@ def setup_logging(
     format_string: str | None = None
 ) -> logging.Logger:
     """
-    Setup logging configuration for telegram-upload.
+    Setup logging configuration for tgupi.
 
     Args:
         level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
-               Can also be set via TELEGRAM_UPLOAD_LOG_LEVEL environment variable.
+               Can also be set via TGUPI_LOG_LEVEL environment variable.
         log_file: Optional file path to write logs to.
-                  Can also be set via TELEGRAM_UPLOAD_LOG_FILE environment variable.
+                  Can also be set via TGUPI_LOG_FILE environment variable.
         format_string: Custom log format string.
 
     Returns:
-        Configured root logger for telegram_upload package.
+        Configured root logger for tgupi package.
 
     Environment Variables:
-        TELEGRAM_UPLOAD_LOG_LEVEL: Set log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
-        TELEGRAM_UPLOAD_LOG_FILE: Path to log file (in addition to console output)
+        TGUPI_LOG_LEVEL: Set log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        TGUPI_LOG_FILE: Path to log file (in addition to console output)
 
     Example:
-        >>> from telegram_upload.logging_config import setup_logging
+        >>> from tgupi.logging_config import setup_logging
         >>> setup_logging(level=logging.DEBUG)
         >>> # Or via environment:
-        >>> # export TELEGRAM_UPLOAD_LOG_LEVEL=DEBUG
+        >>> # export TGUPI_LOG_LEVEL=DEBUG
         >>> setup_logging()
     """
     # Determine log level from parameter or environment
     if level is None:
-        level_name = os.environ.get('TELEGRAM_UPLOAD_LOG_LEVEL', 'INFO').upper()
+        level_name = os.environ.get('TGUPI_LOG_LEVEL', 'INFO').upper()
         level = getattr(logging, level_name, DEFAULT_LOG_LEVEL)
 
     # Determine log file from parameter or environment
     if log_file is None:
-        log_file = os.environ.get('TELEGRAM_UPLOAD_LOG_FILE')
+        log_file = os.environ.get('TGUPI_LOG_FILE')
 
     # Use default format if not specified
     if format_string is None:
         format_string = DEFAULT_LOG_FORMAT
 
-    # Get the root logger for telegram_upload package
-    logger = logging.getLogger('telegram_upload')
+    # Get the root logger for tgupi package
+    logger = logging.getLogger('tgupi')
     logger.setLevel(level)
 
     # Remove existing handlers to avoid duplicates
@@ -98,7 +98,7 @@ def get_logger(name: str) -> logging.Logger:
         Logger instance for the module.
 
     Example:
-        >>> from telegram_upload.logging_config import get_logger
+        >>> from tgupi.logging_config import get_logger
         >>> logger = get_logger(__name__)
         >>> logger.info('Starting upload...')
     """

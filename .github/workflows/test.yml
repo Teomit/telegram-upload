@@ -24,7 +24,7 @@ jobs:
       - name: Type check with mypy
         run: mypy
       - name: Test with coverage
-        run: pytest --cov=telegram_upload --cov-report=term-missing
+        run: pytest --cov=tgupi --cov-report=term-missing
       - name: Security audit
         run: |
           pip install pip-audit

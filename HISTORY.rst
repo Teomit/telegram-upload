@@ -5,7 +5,7 @@ History
 0.7.1 (2023-08-04)
 ------------------
 
-* Issue #215: "TypeError: __init__() got an unexpected keyword argument 'reply_to_msg_id'" in command - "telegram-upload --directories "recursive" --album"
+* Issue #215: "TypeError: __init__() got an unexpected keyword argument 'reply_to_msg_id'" in command - "tgupi --directories "recursive" --album"
 
 0.7.0 (2023-06-29)
 ------------------
@@ -50,7 +50,7 @@ History
 * Issue #82: Error in files with corrupted or unsupported video mimetype
 * Issue #83: Raise error when file is empty
 * Issue #84: Catch ChatWriteForbiddenError
-* Issue #94: Unclosed file ~/.config/telegram-upload.json wb
+* Issue #94: Unclosed file ~/.config/tgupi.json wb
 * Issue #110: Error uploading corrupt or unsupported video file
 * Issue #129: Caption chars length
 * Issue #149: Support Python 3.10

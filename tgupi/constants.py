@@ -1,5 +1,5 @@
 """
-Constants used throughout the telegram-upload application.
+Constants used throughout the tgupi application.
 
 This module centralizes magic numbers and strings to improve
 code maintainability and readability.

@@ -14,20 +14,20 @@ You can see the :ref:`supported_file_types` reference for more information.
 
 Database is locked
 ------------------
-Telegram-upload is already running, or an old process **has locked the session** (``telegram-upload.session``). Only one
+Telegram-upload is already running, or an old process **has locked the session** (``tgupi.session``). Only one
 Telegram-upload session can be run at a time.
 
 **If you need to run Telegram-upload multiple times anyway**, you need to duplicate the session and config files:
 
-1. Copy the session file (``~/.config/telegram-upload.session``) to another path.
-2. Copy the configuration file (``~/.config/telegram-upload.json``) to another path.
+1. Copy the session file (``~/.config/tgupi.session``) to another path.
+2. Copy the configuration file (``~/.config/tgupi.json``) to another path.
 3. Edit this file and add the path to session file like this: ``{"api_id": 0, "api_hash":
-   "...", "session": "/path/to/telegram-upload.json"}``.
-4. Run using ``--config /path/to/telegram-upload.json``.
+   "...", "session": "/path/to/tgupi.json"}``.
+4. Run using ``--config /path/to/tgupi.json``.
 
 If you are sure that Telegram-upload is not running, search for the process that is blocking the file::
 
-    fuser ~/.config/telegram-upload.session
+    fuser ~/.config/tgupi.session
 
 As a last resort, you can restart your machine.
 
@@ -40,12 +40,12 @@ can become overloaded and return 429 errors. This is normal and you don't have t
 these errors, you can try to reduce the number of parallel uploads using the ``PARALLEL_UPLOAD_BLOCKS`` environment
 variable. For example::
 
-    $ PARALLEL_UPLOAD_BLOCKS=2 telegram-upload video.mkv
+    $ PARALLEL_UPLOAD_BLOCKS=2 tgupi video.mkv
 
 Or exporting the variable::
 
     $ export PARALLEL_UPLOAD_BLOCKS=2
-    $ telegram-upload video.mkv
+    $ tgupi video.mkv
 
 The **default value is 4**. Values above this value can increase the number of 429 errors. Telegram-upload in case of
 an error will try to reconnect to the API before ``TELEGRAM_UPLOAD_MIN_RECONNECT_WAIT`` seconds. The default value is 2.
@@ -63,12 +63,12 @@ Telegram-upload is not tested with all versions of all dependencies it uses. If 
 on your system (using root) maybe some existing dependency is on an incompatible version. You can try updating the
 dependencies carefully::
 
-    $ pip install -U telegram-upload Telethon hachoir cryptg click
+    $ pip install -U tgupi Telethon hachoir cryptg click
 
 To avoid errors it is recommended to use `virtualenvs <https://docs.python-guide.org/dev/virtualenvs/>`_.
 
 Before asking for help, remember to find out if `the issue already exists <https://github
-.com/Nekmo/telegram-upload/issues>`_. If you open a ticket remember to paste your system dependencies on the issue::
+.com/Nekmo/tgupi/issues>`_. If you open a ticket remember to paste your system dependencies on the issue::
 
     $ pip freeze
 

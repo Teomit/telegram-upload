@@ -22,12 +22,12 @@ The tests were performed using different number of parallel chunks uploaded at t
 Telegram-upload uploads *4 chunks at the same time*. You can change this value using the ``PARALLEL_UPLOAD_BLOCKS``
 environment variable. For example::
 
-    $ PARALLEL_UPLOAD_BLOCKS=2 telegram-upload video.mkv
+    $ PARALLEL_UPLOAD_BLOCKS=2 tgupi video.mkv
 
 Or exporting the variable::
 
     $ export PARALLEL_UPLOAD_BLOCKS=2
-    $ telegram-upload video.mkv
+    $ tgupi video.mkv
 
 Note that increasing the number of parallel chunks uploaded at the same time will increase the CPU usage and can
 increase the number of 429 errors. These errors are caused by Telegram after exceeding the server's resource limits.
