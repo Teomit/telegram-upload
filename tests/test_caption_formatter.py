@@ -1,4 +1,3 @@
-import sys
 import unittest
 from pathlib import Path
 from unittest.mock import patch, MagicMock, mock_open, call
@@ -97,8 +96,6 @@ class TestFileMedia(unittest.TestCase):
         """Set up the test case."""
         self.file_media = FileMedia("video.mkv")
         self.mock_metadata = self.file_media.metadata
-
-    @unittest.skipIf(sys.version_info < (3, 8), "Unsupported in Python 3.7")
     def test_video_metadata(self):
         """Test the video_metadata attribute."""
         with self.subTest("Test mkv video"):
@@ -310,7 +307,6 @@ class TestFilePath(unittest.TestCase):
         mock_os_stat.assert_called_once_with("file.txt")
 
     @patch("telegram_upload.caption_formatter.datetime")
-    @unittest.skipIf(sys.version_info < (3, 8), "Python 3.7 is not supported.")
     def test_ctime(self, mock_datetime: MagicMock):
         """Test the ctime attribute."""
         mock_file_stat = MagicMock()
@@ -319,7 +315,6 @@ class TestFilePath(unittest.TestCase):
         mock_datetime.datetime.fromtimestamp.assert_called_once_with(mock_file_stat.st_ctime)
 
     @patch("telegram_upload.caption_formatter.datetime")
-    @unittest.skipIf(sys.version_info < (3, 8), "Python 3.7 is not supported.")
     def test_mtime(self, mock_datetime: MagicMock):
         """Test the mtime attribute."""
         mock_file_stat = MagicMock()
@@ -328,7 +323,6 @@ class TestFilePath(unittest.TestCase):
         mock_datetime.datetime.fromtimestamp.assert_called_once_with(mock_file_stat.st_mtime)
 
     @patch("telegram_upload.caption_formatter.datetime")
-    @unittest.skipIf(sys.version_info < (3, 8), "Python 3.7 is not supported.")
     def test_atime(self, mock_datetime: MagicMock):
         """Test the atime attribute."""
         mock_file_stat = MagicMock()
@@ -337,7 +331,6 @@ class TestFilePath(unittest.TestCase):
         mock_datetime.datetime.fromtimestamp.assert_called_once_with(mock_file_stat.st_atime)
 
     @patch("telegram_upload.caption_formatter.FileSize")
-    @unittest.skipIf(sys.version_info < (3, 8), "Python 3.7 is not supported.")
     def test_size(self, mock_file_size: MagicMock):
         """Test the size attribute."""
         mock_file_stat = MagicMock()

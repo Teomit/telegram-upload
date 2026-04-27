@@ -1,4 +1,3 @@
-import sys
 import unittest
 from unittest.mock import patch
 
@@ -7,7 +6,6 @@ from telegram_upload.utils import async_to_sync
 
 
 class TestShowCheckboxList(unittest.TestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), "Python 3.8 is required")
     @patch('prompt_toolkit.application.application.Application.run_async')
     def test_show_checkbox_list(self, m):
         async def aiterator():
@@ -28,7 +26,6 @@ class TestShowCheckboxList(unittest.TestCase):
 
 
 class TestShowRadioList(unittest.TestCase):
-    @unittest.skipIf(sys.version_info < (3, 8), "Python 3.8 is required")
     @patch('prompt_toolkit.application.application.Application.run_async')
     def test_show_radio_list(self, m):
         async def aiterator():

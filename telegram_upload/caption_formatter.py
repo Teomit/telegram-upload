@@ -4,8 +4,8 @@ import hashlib
 import logging
 import mimetypes
 import os
-import sys
 import zlib
+from functools import cached_property
 from pathlib import Path, PosixPath, WindowsPath
 from string import Formatter
 from typing import Any, Sequence, Mapping, Tuple, Optional
@@ -22,12 +22,6 @@ try:
     from typing import LiteralString
 except ImportError:
     LiteralString = str
-
-
-if sys.version_info < (3, 8):
-    cached_property = property
-else:
-    from functools import cached_property
 
 
 CHUNK_SIZE = 4096

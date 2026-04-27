@@ -3,15 +3,15 @@ import json
 import logging
 import os
 import re
-import sys
+from functools import cached_property
 from typing import Union
 from urllib.parse import urlparse
 
 import click
+import telethon.sync  # noqa: F401  -- side-effect import enabling sync API
 from telethon.errors import ApiIdInvalidError
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 from telethon.tl.types import DocumentAttributeFilename, User, InputPeerUser
-from telethon.version import __version__ as telethon_version
 
 from telegram_upload.client.telegram_download_client import TelegramDownloadClient
 from telegram_upload.client.telegram_upload_client import TelegramUploadClient
@@ -19,23 +19,6 @@ from telegram_upload.config import SESSION_FILE
 from telegram_upload.exceptions import TelegramProxyError, InvalidApiFileError, TelegramUploadError
 
 logger = logging.getLogger(__name__)
-
-try:
-    from packaging.version import Version
-except ImportError:
-    # Fallback for older environments, but log warning
-    logger.warning("packaging module not found, using deprecated distutils")
-    from distutils.version import StrictVersion as Version
-
-# All current telethon versions are >= 1.0, but keeping check for compatibility
-if Version(telethon_version) >= Version('1.0'):
-    import telethon.sync  # noqa
-
-
-if sys.version_info < (3, 8):
-    cached_property = property
-else:
-    from functools import cached_property
 
 
 BOT_USER_MAX_FILE_SIZE = 52428800  # 50MB

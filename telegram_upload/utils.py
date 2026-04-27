@@ -2,7 +2,8 @@ import asyncio
 import itertools
 import os
 import shutil
-from telegram_upload._compat import scandir
+from os import scandir
+
 from telegram_upload.exceptions import TelegramEnvironmentError
 
 

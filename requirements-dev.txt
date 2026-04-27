@@ -1,9 +1,7 @@
 -r requirements.txt
-bumpversion
+bump-my-version
 sphinx-click
-tox>=1.8
-codecov
-pysocks
-mock; python_version < '3.6'
-asyncmock; python_version < '3.8'
-async-case; python_version < '3.8'
+tox>=4.0
+coverage
+ruff
+pre-commit

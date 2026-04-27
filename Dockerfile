@@ -1,4 +1,4 @@
-ARG python_version=3.9.7
+ARG python_version=3.13-slim
 
 FROM python:$python_version
 ENV TELEGRAM_UPLOAD_CONFIG_DIRECTORY=/config

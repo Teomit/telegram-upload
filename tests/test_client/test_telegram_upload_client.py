@@ -1,9 +1,8 @@
 import json
 import os
-import sys
 import unittest
-
-from unittest.mock import patch, mock_open, Mock, MagicMock, call
+from unittest import IsolatedAsyncioTestCase
+from unittest.mock import AsyncMock, patch, mock_open, Mock, MagicMock, call
 
 from telethon import types
 from telethon.errors import FloodWaitError, RPCError
@@ -11,14 +10,6 @@ from telethon.errors import FloodWaitError, RPCError
 from telegram_upload.client.telegram_upload_client import TelegramUploadClient
 from telegram_upload.exceptions import TelegramUploadDataLoss, MissingFileError
 from telegram_upload.upload_files import File
-
-
-try:
-    from unittest.mock import AsyncMock
-    from unittest import IsolatedAsyncioTestCase
-except ImportError:
-    from asyncmock import AsyncMock
-    from async_case import IsolatedAsyncioTestCase
 
 CONFIG_DATA = {'api_hash': '', 'api_id': ''}
 
@@ -66,7 +57,6 @@ class TestTelegramUploadClient(IsolatedAsyncioTestCase):
 
     @patch('telegram_upload.client.telegram_upload_client.TelegramUploadClient.send_files')
     @patch('telegram_upload.client.telegram_upload_client.TelegramUploadClient._send_album_media')
-    @unittest.skipIf(sys.version_info < (3, 8), "TypeError: An asyncio.Future, a coroutine or an awaitable is required")
     def test_send_files_as_album(self, mock_send_album_media: MagicMock, mock_send_files: MagicMock):
         entity = "entity"
         mock_files = [MagicMock(), MagicMock()]
@@ -150,7 +140,6 @@ class TestTelegramUploadClient(IsolatedAsyncioTestCase):
             self.client.send_files('foo', [file])
 
     @patch('telegram_upload.client.telegram_upload_client.utils')
-    @unittest.skipIf(sys.version_info < (3, 8), "TypeError: Cannot cast AsyncMock to any kind of InputMedia.")
     async def test_send_media(self, mock_utils: MagicMock):
         mock_client = MagicMock(max_caption_length=200)
         mock_utils.get_appropriated_part_size.return_value = 512

@@ -1,15 +1,8 @@
 import os
-import sys
+from functools import cached_property
 from typing import Iterable, Iterator, Optional, BinaryIO
 
 from telethon.tl.types import Message, DocumentAttributeFilename
-
-
-if sys.version_info < (3, 8):
-    cached_property = property
-else:
-    from functools import cached_property
-
 
 CHUNK_FILE_SIZE = 1024 * 1024
 

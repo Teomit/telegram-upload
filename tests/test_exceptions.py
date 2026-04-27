@@ -1,5 +1,5 @@
 import unittest
-from ._compat import patch
+from unittest.mock import patch
 
 from telegram_upload.exceptions import TelegramUploadError, catch
 

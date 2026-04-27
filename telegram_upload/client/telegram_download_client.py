@@ -2,10 +2,8 @@ import asyncio
 import inspect
 import io
 import pathlib
-import sys
-from typing import Iterable
-
 import typing
+from typing import Iterable
 
 from more_itertools import grouper
 from telethon import TelegramClient, utils, helpers
@@ -16,11 +14,6 @@ from telegram_upload.client.progress_bar import get_progress_bar
 from telegram_upload.download_files import DownloadFile
 from telegram_upload.exceptions import TelegramUploadNoSpaceError
 from telegram_upload.utils import free_disk_usage, sizeof_fmt, get_environment_integer
-
-
-if sys.version_info < (3, 10):
-    from telegram_upload._compat import anext
-
 
 PARALLEL_DOWNLOAD_BLOCKS = get_environment_integer('TELEGRAM_UPLOAD_PARALLEL_DOWNLOAD_BLOCKS', 10)
 

@@ -1,12 +1,9 @@
 import os
 import unittest
-from unittest.mock import MagicMock
-
-from telethon.tl.types import DocumentAttributeFilename, User
-
-from ._compat import patch
+from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
+from telethon.tl.types import DocumentAttributeFilename, User
 
 from telegram_upload.management import upload, download, get_file_display_name
 
