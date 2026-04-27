@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, mock_open, patch
 import socks
 from telethon.network import ConnectionTcpMTProxyRandomizedIntermediate
 
-from telegram_upload._backend import TelegramManagerClient
+from telegram_upload._backend._telethon import TelethonBackend as TelegramManagerClient
 from telegram_upload._backend._telethon._manager import (
     BOT_USER_MAX_FILE_SIZE,
     PREMIUM_USER_MAX_CAPTION_LENGTH,

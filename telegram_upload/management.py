@@ -3,7 +3,7 @@ import logging
 
 import click
 
-from telegram_upload._backend import TelegramManagerClient, get_message_file_attribute
+from telegram_upload._backend import TelegramManagerClient
 from telegram_upload.config import CONFIG_FILE, default_config
 from telegram_upload.download_files import JoinDownloadSplitFiles, KeepDownloadSplitFiles
 from telegram_upload.exceptions import catch
@@ -26,21 +26,37 @@ DOWNLOAD_SPLIT_FILE_MODES = {
 LOG_LEVELS = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']
 
 
+def _extract_file_name(document) -> str | None:
+    """Filename from a document, working for both Telethon and Pyrogram shapes.
+
+    Telethon stores it as a DocumentAttributeFilename in `document.attributes`.
+    Pyrogram exposes it directly as `document.file_name`. Our PyrogramMessageAdapter
+    mimics the Telethon shape, so the attributes path covers both. Direct
+    `file_name` is checked as a final fallback.
+    """
+    if document is None:
+        return None
+    for attr in getattr(document, "attributes", None) or ():
+        name = getattr(attr, "file_name", None)
+        if name:
+            return name
+    return getattr(document, "file_name", None)
+
+
 def get_file_display_name(message):
     parts = []
     document = message.document
-    if document and document.mime_type:
+    if document and getattr(document, "mime_type", None):
         parts.append(document.mime_type.split('/')[0])
-    file_attr = get_message_file_attribute(message) if document else None
-    if file_attr:
-        parts.append(file_attr.file_name)
+    file_name = _extract_file_name(document)
+    if file_name:
+        parts.append(file_name)
     if message.text:
         parts.append(f'[{message.text}]' if parts else message.text)
     sender = message.sender
-    if sender is not None and getattr(sender, 'first_name', None) is not None:
+    if sender is not None and getattr(sender, 'first_name', None):
         parts.append('by')
-        if sender.first_name:
-            parts.append(sender.first_name)
+        parts.append(sender.first_name)
         if getattr(sender, 'last_name', None):
             parts.append(sender.last_name)
         if getattr(sender, 'username', None):
