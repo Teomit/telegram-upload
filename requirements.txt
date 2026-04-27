@@ -1,11 +1,10 @@
-# Telegram clients.
-#   pyrofork is the active fork of pyrogram and works on Python 3.13+.
-#   Both ship and import as `pyrogram`. Telethon stays during the migration
-#   and is removed in Этап 6.
+# pyrofork is the active Pyrogram fork; both ship and import as `pyrogram`.
+# Upstream pyrogram 2.0.x doesn't run on Python 3.13+ (asyncio.get_event_loop
+# RuntimeError), pyrofork patches that.
 pyrofork>=2.3,<3.0
-cryptography>=42.0  # AES-IGE acceleration for pyrogram (replaces tgcrypto)
-telethon>=1.24.0,<2.0.0  # legacy backend, removed in Этап 6
-cryptg>=0.4.0,<1.0.0     # AES acceleration for telethon
+# AES-IGE acceleration for pyrogram. tgcrypto isn't built for Python 3.13+;
+# cryptography is much faster than the pure-Python pyaes fallback.
+cryptography>=42.0
 click>=8.0.0,<9.0.0
 pysocks>=1.7.1,<2.0.0
 more-itertools>=8.0.0,<12.0.0

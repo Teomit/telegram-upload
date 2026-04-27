@@ -1,9 +1,7 @@
 import os
 from collections.abc import Iterable, Iterator
 from functools import cached_property
-from typing import BinaryIO
-
-from telethon.tl.types import DocumentAttributeFilename, Message
+from typing import Any, BinaryIO
 
 CHUNK_FILE_SIZE = 1024 * 1024
 
@@ -107,8 +105,14 @@ class DownloadFile:
     """File to download. This includes the Telethon message with the file."""
     downloaded_file_name: str | None = None
 
-    def __init__(self, message: Message):
-        """Creates the download file instance from the message."""
+    def __init__(self, message: Any):
+        """Creates the download file instance from the message.
+
+        ``message`` can be a Telethon Message, a Pyrogram Message, or a
+        ``PyrogramMessageAdapter``. Anything that exposes ``.document`` with
+        ``.attributes`` (each attribute carrying ``.file_name``) and ``.size``
+        works.
+        """
         self.message = message
 
     def set_download_file_name(self, file_name):
@@ -116,10 +120,17 @@ class DownloadFile:
         self.downloaded_file_name = file_name
 
     @cached_property
-    def filename_attr(self) -> DocumentAttributeFilename | None:
-        """Get the document attribute file name attribute in the document."""
-        return next(filter(lambda x: isinstance(x, DocumentAttributeFilename),
-                           self.document.attributes), None)
+    def filename_attr(self):
+        """Return the first attribute exposing a ``file_name``, or None.
+
+        Both Telethon (``DocumentAttributeFilename``) and our adapter for
+        Pyrogram (``_AttrFilename``) expose ``.file_name`` directly, so a
+        duck-typed lookup keeps this class backend-agnostic.
+        """
+        for attr in self.document.attributes:
+            if getattr(attr, "file_name", None):
+                return attr
+        return None
 
     @cached_property
     def file_name(self) -> str:
@@ -149,7 +160,7 @@ class DownloadFile:
 
 class DownloadSplitFilesBase:
     """Iterate over complete and split files. Base class to inherit."""
-    def __init__(self, messages: Iterable[Message]):
+    def __init__(self, messages: Iterable[Any]):
         self.messages = messages
 
     def get_iterator(self) -> Iterator[DownloadFile]:

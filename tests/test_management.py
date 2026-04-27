@@ -1,9 +1,9 @@
 import os
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from click.testing import CliRunner
-from telethon.tl.types import DocumentAttributeFilename, User
 
 from telegram_upload.management import download, get_file_display_name, upload
 
@@ -14,10 +14,10 @@ class TestGetFileDisplayName(unittest.TestCase):
     def test_get_file_display_name(self):
         mock_message = MagicMock()
         mock_message.document.mime_type = "text/plain"
-        mock_message.document.attributes = [DocumentAttributeFilename("test.txt")]
+        mock_message.document.attributes = [SimpleNamespace(file_name="test.txt")]
         mock_message.text = "text"
-        mock_message.sender = User(
-            1000, first_name="first_name", last_name="last_name", username="username",
+        mock_message.sender = SimpleNamespace(
+            first_name="first_name", last_name="last_name", username="username",
         )
         mock_message.date = "date"
         display_name = get_file_display_name(mock_message)

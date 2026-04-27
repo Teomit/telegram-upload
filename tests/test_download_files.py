@@ -1,8 +1,7 @@
 import unittest
 from io import BytesIO
+from types import SimpleNamespace
 from unittest.mock import MagicMock, call, patch
-
-from telethon.tl.types import DocumentAttributeFilename
 
 from telegram_upload.download_files import (
     CHUNK_FILE_SIZE,
@@ -14,6 +13,11 @@ from telegram_upload.download_files import (
     get_join_strategy,
     pipe_file,
 )
+
+
+def DocumentAttributeFilename(name):  # noqa: N802 — shim for test data
+    """Stand-in for the Telethon attribute. DownloadFile only reads .file_name."""
+    return SimpleNamespace(file_name=name)
 
 
 class TestPipeFile(unittest.TestCase):

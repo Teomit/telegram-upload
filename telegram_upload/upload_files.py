@@ -6,9 +6,7 @@ from io import SEEK_SET, FileIO
 from typing import TYPE_CHECKING
 
 import click
-from telethon.tl.types import DocumentAttributeFilename, DocumentAttributeVideo
 
-from telegram_upload._media import probe
 from telegram_upload.caption_formatter import CaptionFormatter, FilePath
 from telegram_upload.constants import SPLIT_FILE_PART_NUMBER_PADDING
 from telegram_upload.exceptions import TelegramInvalidFile, ThumbError
@@ -44,33 +42,6 @@ def get_file_mime(file: str) -> str:
         MIME type category (e.g., 'video', 'image', 'audio') or empty string
     """
     return (mimetypes.guess_type(file)[0] or '').split('/')[0]
-
-
-def get_file_attributes(file: str) -> list:
-    """
-    Get Telegram document attributes for a file.
-
-    Args:
-        file: Path to the file
-
-    Returns:
-        List of document attributes (e.g., DocumentAttributeVideo)
-    """
-    if get_file_mime(file) != 'video':
-        return []
-    info = probe(file)
-    if info.duration is None and info.width is None and info.height is None:
-        # ffprobe is missing or returned nothing useful; skip video attrs.
-        return []
-    return [
-        DocumentAttributeVideo(
-            duration=info.duration or 0,
-            w=info.width or 0,
-            h=info.height or 0,
-            round_message=False,
-            supports_streaming=info.supports_streaming,
-        ),
-    ]
 
 
 def get_file_thumb(file: str) -> str | None:
@@ -205,13 +176,6 @@ class File(FileIO):
                 raise TelegramInvalidFile(f'{self._thumbnail} thumbnail file does not exists.')
             thumb = self._thumbnail
         return thumb
-
-    @property
-    def file_attributes(self):
-        if self.force_file:
-            return [DocumentAttributeFilename(self.file_name)]
-        else:
-            return get_file_attributes(self.path)
 
 
 class SplitFile(File, FileIO):
