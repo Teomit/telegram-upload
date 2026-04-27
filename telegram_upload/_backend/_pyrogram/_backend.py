@@ -280,7 +280,7 @@ class PyrogramBackend:
             else:
                 media_items.append(InputMediaDocument(media=file.path, caption=caption))
         messages = self._client.send_media_group(chat_id=entity, media=media_items)
-        for msg in messages:
+        for msg in messages:  # type: ignore[attr-defined]
             for dst in forward:
                 self._client.forward_messages(dst, entity, msg.id)
         if delete_on_success:

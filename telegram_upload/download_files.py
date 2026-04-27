@@ -99,6 +99,7 @@ def get_join_strategy(download_file: 'DownloadFile') -> JoinStrategyBase | None:
             strategy = strategy_cls()
             strategy.add_download_file(download_file)
             return strategy
+    return None
 
 
 class DownloadFile:
@@ -153,9 +154,14 @@ class DownloadFile:
         """Get the file size."""
         return self.document.size
 
-    def __eq__(self, other: 'DownloadFile'):
+    def __eq__(self, other: object) -> bool:
         """Compare download files by their file name."""
+        if not isinstance(other, DownloadFile):
+            return NotImplemented
         return self.file_name == other.file_name
+
+    def __hash__(self) -> int:
+        return hash(self.file_name)
 
 
 class DownloadSplitFilesBase:

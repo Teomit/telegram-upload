@@ -18,12 +18,6 @@ from telegram_upload.constants import DURATION_LAST_SEPARATOR, DURATION_SEPARATO
 
 logger = logging.getLogger(__name__)
 
-try:
-    from typing import LiteralString
-except ImportError:
-    LiteralString = str
-
-
 CHUNK_SIZE = 4096
 VALID_TYPES: tuple[Any, ...] = (str, int, float, complex, bool, datetime.datetime, datetime.date, datetime.time)
 AUTHORIZED_METHODS = (Path.home,)
@@ -115,8 +109,8 @@ class FileSize:
         return self.as_mebibytes // 1024
 
     @property
-    def for_humans(self, suffix="B") -> str:
-        num = self.size
+    def for_humans(self, suffix: str = "B") -> str:
+        num: float = self.size
         for unit in ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"):
             if abs(num) < 1024.0:
                 return f"{num:3.1f} {unit}{suffix}"
@@ -272,23 +266,23 @@ class FileMixin:
         return mimetypes.guess_type(str(self))[0]
 
     @cached_property
-    def suffixes(self) -> str:
-        return "".join(super().suffixes)
+    def suffixes(self) -> str:  # type: ignore[override,misc]
+        return "".join(super().suffixes)  # type: ignore[misc]
 
     @property
-    def absolute(self) -> "FilePath":
-        return super().absolute()
+    def absolute(self):  # type: ignore[override]
+        return super().absolute()  # type: ignore[misc]
 
     @property
-    def relative(self) -> "FilePath":
-        return self.relative_to(Path.cwd())
+    def relative(self):
+        return self.relative_to(Path.cwd())  # type: ignore[attr-defined]
 
 
-class WindowsFilePath(FileMixin, WindowsPath):
+class WindowsFilePath(FileMixin, WindowsPath):  # type: ignore[misc]
     pass
 
 
-class PosixFilePath(FileMixin, PosixPath):
+class PosixFilePath(FileMixin, PosixPath):  # type: ignore[misc]
     pass
 
 
@@ -327,11 +321,11 @@ class CaptionFormatter(Formatter):
             first, rest = _string.formatter_field_name_split(field_name)
             return '{' + field_name + '}', first
 
-    def format(self, __format_string: LiteralString, *args: LiteralString, **kwargs: LiteralString) -> LiteralString:
+    def format(self, format_string: str, /, *args: Any, **kwargs: Any) -> str:
         try:
-            return super().format(__format_string, *args, **kwargs)
+            return super().format(format_string, *args, **kwargs)
         except ValueError:
-            return __format_string
+            return format_string
 
 
 @click.command()

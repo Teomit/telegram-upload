@@ -181,13 +181,13 @@ class File(FileIO):
 class SplitFile(File, FileIO):
     force_file = True
 
-    def __init__(self, client: 'TelegramManagerClient', file: str | bytes | int, max_read_size: int, name: str):
+    def __init__(self, client: 'TelegramManagerClient', file: str, max_read_size: int, name: str):
         super().__init__(client, file)
         self.max_read_size = max_read_size
         self.remaining_size = max_read_size
         self._name = name
 
-    def read(self, size: int = -1) -> bytes:
+    def read(self, size: int = -1) -> bytes:  # type: ignore[override]
         if size == -1:
             size = self.remaining_size
         if not self.remaining_size:

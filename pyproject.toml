@@ -78,6 +78,23 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["B017", "SIM"]    # tests can use bare excepts/asserts liberally
 
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+files = ["telegram_upload"]
+# pyrogram wraps async methods in sync stubs at import time (sync.py); mypy
+# can't see that, so calling Client.send_document is reported as
+# `unused-coroutine`. Disable that one check globally rather than scattering
+# # type: ignore comments at every call site.
+disable_error_code = ["unused-coroutine"]
+
+[[tool.mypy.overrides]]
+module = "telegram_upload._backend._pyrogram._backend"
+# Pyrogram InputMedia* are siblings, not subclasses of a common Input type;
+# mypy infers list[InputMediaVideo] from the first append and complains. The
+# code is correct at runtime — pyrogram dispatches by isinstance.
+disable_error_code = ["arg-type", "list-item"]
+
 [tool.coverage.run]
 source = ["telegram_upload"]
 branch = true
