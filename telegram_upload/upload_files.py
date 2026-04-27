@@ -6,15 +6,14 @@ from io import SEEK_SET, FileIO
 from typing import TYPE_CHECKING
 
 import click
-from hachoir.metadata.video import MP4Metadata
 from telethon.tl.types import DocumentAttributeFilename, DocumentAttributeVideo
 
+from telegram_upload._media import probe
 from telegram_upload.caption_formatter import CaptionFormatter, FilePath
 from telegram_upload.constants import SPLIT_FILE_PART_NUMBER_PADDING
 from telegram_upload.exceptions import TelegramInvalidFile, ThumbError
-from telegram_upload.metadata_helpers import get_video_metadata_stream, metadata_has
 from telegram_upload.utils import scantree, truncate
-from telegram_upload.video import get_video_thumb, video_metadata
+from telegram_upload.video import get_video_thumb
 
 mimetypes.init()
 
@@ -57,22 +56,21 @@ def get_file_attributes(file: str) -> list:
     Returns:
         List of document attributes (e.g., DocumentAttributeVideo)
     """
-    attrs = []
-    mime = get_file_mime(file)
-    if mime == 'video':
-        metadata = video_metadata(file)
-        # Use helper function to safely extract video stream (handles MKV files)
-        video_meta = get_video_metadata_stream(metadata)
-        if metadata is not None:
-            supports_streaming = isinstance(video_meta, MP4Metadata)
-            attrs.append(DocumentAttributeVideo(
-                (0, metadata.get('duration').seconds)[metadata_has(metadata, 'duration')],
-                (0, video_meta.get('width'))[metadata_has(video_meta, 'width')],
-                (0, video_meta.get('height'))[metadata_has(video_meta, 'height')],
-                False,
-                supports_streaming,
-            ))
-    return attrs
+    if get_file_mime(file) != 'video':
+        return []
+    info = probe(file)
+    if info.duration is None and info.width is None and info.height is None:
+        # ffprobe is missing or returned nothing useful; skip video attrs.
+        return []
+    return [
+        DocumentAttributeVideo(
+            duration=info.duration or 0,
+            w=info.width or 0,
+            h=info.height or 0,
+            round_message=False,
+            supports_streaming=info.supports_streaming,
+        ),
+    ]
 
 
 def get_file_thumb(file: str) -> str | None:

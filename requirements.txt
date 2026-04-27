@@ -2,6 +2,7 @@
 telethon>=1.24.0,<2.0.0
 click>=8.0.0,<9.0.0
 cryptg>=0.4.0,<1.0.0
-hachoir>=3.0.0,<4.0.0
 pysocks>=1.7.1,<2.0.0
 more-itertools>=8.0.0,<12.0.0
+# ffmpeg + ffprobe must be on PATH (not pip packages). Required for
+# video thumbnails and metadata. Install via system package manager.

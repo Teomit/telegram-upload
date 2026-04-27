@@ -13,9 +13,8 @@ from typing import Any
 
 import click
 
+from telegram_upload._media import MediaInfo, probe
 from telegram_upload.constants import DURATION_LAST_SEPARATOR, DURATION_SEPARATOR
-from telegram_upload.metadata_helpers import get_video_metadata_stream
-from telegram_upload.video import video_metadata
 
 logger = logging.getLogger(__name__)
 
@@ -132,51 +131,46 @@ class FileSize:
 
 
 class FileMedia:
+    """Lazy media metadata for caption templating.
+
+    Wraps a MediaInfo from ffprobe and exposes its fields as plain attributes
+    so they're addressable from format strings like ``{file.media.duration}``.
+    """
+
     def __init__(self, path: str):
         self.path = path
-        self.metadata = video_metadata(path)
 
     @cached_property
-    def video_metadata(self) -> Any:
-        """Get video-specific metadata stream, handling MKV containers."""
-        return get_video_metadata_stream(self.metadata)
+    def info(self) -> MediaInfo:
+        return probe(self.path)
 
     @property
     def duration(self) -> Duration | None:
-        if self.metadata and self.metadata.has('duration'):
-            return Duration(self.metadata.get('duration').seconds)
-
-    def _get_video_metadata(self, key: str) -> Any | None:
-        if self.video_metadata and self.video_metadata.has(key):
-            return self.video_metadata.get(key)
-
-    def _get_metadata(self, key: str) -> Any | None:
-        if self.metadata and self.metadata.has(key):
-            return self.metadata.get(key)
+        return Duration(self.info.duration) if self.info.duration is not None else None
 
     @property
     def width(self) -> int | None:
-        return self._get_video_metadata('width')
+        return self.info.width
 
     @property
     def height(self) -> int | None:
-        return self._get_video_metadata('height')
+        return self.info.height
 
     @property
     def title(self) -> str | None:
-        return self._get_metadata('title')
+        return self.info.title
 
     @property
     def artist(self) -> str | None:
-        return self._get_metadata('artist')
+        return self.info.artist
 
     @property
     def album(self) -> str | None:
-        return self._get_metadata('album')
+        return self.info.album
 
     @property
     def producer(self) -> str | None:
-        return self._get_metadata('producer')
+        return self.info.producer
 
 
 class FileMixin:
@@ -290,22 +284,24 @@ class FileMixin:
         return self.relative_to(Path.cwd())
 
 
-class FilePath(FileMixin, Path):
-    def __new__(cls, *args, **kwargs):
-        if cls is FilePath:
-            cls = WindowsFilePath if os.name == 'nt' else PosixFilePath
-        self = cls._from_parts(args)
-        if not self._flavour.is_supported:
-            raise NotImplementedError(f"cannot instantiate {cls.__name__!r} on your system")
-        return self
-
-
 class WindowsFilePath(FileMixin, WindowsPath):
     pass
 
 
 class PosixFilePath(FileMixin, PosixPath):
     pass
+
+
+def FilePath(*args, **kwargs) -> "WindowsFilePath | PosixFilePath":  # noqa: N802 -- public name kept for back-compat
+    """Factory that returns an OS-appropriate Path subclass with FileMixin.
+
+    Implemented as a function (not a class) because pathlib was reworked in
+    Python 3.12 and the previous ``FilePath(FileMixin, Path)`` ``__new__``
+    trick relied on the removed ``Path._from_parts``. A factory is portable
+    across 3.11–3.14 and side-steps the metaclass complications.
+    """
+    cls = WindowsFilePath if os.name == 'nt' else PosixFilePath
+    return cls(*args, **kwargs)
 
 
 class CaptionFormatter(Formatter):
@@ -322,7 +318,7 @@ class CaptionFormatter(Formatter):
                     (has_self and isinstance(obj.__self__, datetime.datetime)
                      and obj.__name__ in AUTHORIZED_DT_METHODS):
                 obj = obj()
-            if not isinstance(obj, VALID_TYPES + (WindowsFilePath, PosixFilePath, FilePath, FileSize, Duration)):
+            if not isinstance(obj, VALID_TYPES + (WindowsFilePath, PosixFilePath, FileSize, Duration)):
                 raise TypeError(f'Invalid type for {field_name}: {type(obj)}')
             return obj, first
         except (TypeError, AttributeError, KeyError, ValueError) as e:

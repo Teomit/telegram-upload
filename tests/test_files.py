@@ -2,6 +2,7 @@ import os
 import unittest
 from unittest.mock import MagicMock, Mock, patch
 
+from telegram_upload._media import MediaInfo
 from telegram_upload.client.telegram_manager_client import USER_MAX_FILE_SIZE
 from telegram_upload.exceptions import TelegramInvalidFile
 from telegram_upload.upload_files import (
@@ -18,18 +19,23 @@ class TestGetFileAttributes(unittest.TestCase):
     def test_not_video(self):
         self.assertEqual(get_file_attributes('foo.png'), [])
 
-    @patch('telegram_upload.upload_files.video_metadata')
-    def test_video(self, m_video_metadata):
-        m_video_metadata.return_value.has.return_value = True
-        duration = Mock()
-        duration.seconds = 1000
-        m_video_metadata.return_value.get.side_effect = [
-            duration, 1920, 1080
-        ]
+    @patch('telegram_upload.upload_files.probe')
+    def test_video(self, mock_probe):
+        mock_probe.return_value = MediaInfo(
+            duration=1000, width=1920, height=1080,
+            format_name='mov,mp4', has_video=True,
+        )
         attrs = get_file_attributes('foo.mp4')
-        self.assertEqual(attrs[0].w, 1920)
-        self.assertEqual(attrs[0].h, 1080)
-        self.assertEqual(attrs[0].duration, 1000)
+        self.assertEqual(1, len(attrs))
+        self.assertEqual(1920, attrs[0].w)
+        self.assertEqual(1080, attrs[0].h)
+        self.assertEqual(1000, attrs[0].duration)
+        self.assertTrue(attrs[0].supports_streaming)
+
+    @patch('telegram_upload.upload_files.probe', return_value=MediaInfo())
+    def test_video_no_metadata(self, _):
+        # ffprobe missing or failed → no DocumentAttributeVideo emitted.
+        self.assertEqual([], get_file_attributes('foo.mp4'))
 
 
 class TestRecursiveFiles(unittest.TestCase):

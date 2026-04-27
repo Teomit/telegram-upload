@@ -1,3 +1,4 @@
+import os
 import unittest
 from pathlib import Path
 from unittest.mock import MagicMock, call, mock_open, patch
@@ -96,106 +97,41 @@ class TestFileSize(unittest.TestCase):
 
 
 class TestFileMedia(unittest.TestCase):
-    """Test the FileMedia class."""
+    """Test the FileMedia wrapper around _media.MediaInfo."""
 
-    @patch("telegram_upload.caption_formatter.video_metadata")
-    def setUp(self, mock_video_metadata: MagicMock) -> None:
-        """Set up the test case."""
-        self.file_media = FileMedia("video.mkv")
-        self.mock_metadata = self.file_media.metadata
-    def test_video_metadata(self):
-        """Test the video_metadata attribute."""
-        with self.subTest("Test mkv video"):
-            self.mock_metadata.has.return_value = False
-            self.mock_metadata._MultipleMetadata__groups._key_list = ["video meta", "audio meta"]
-            video_metadata = self.file_media.video_metadata
-            self.assertEqual(self.mock_metadata._MultipleMetadata__groups.__getitem__.return_value, video_metadata)
-            self.mock_metadata._MultipleMetadata__groups.__getitem__.assert_called_once_with("video meta")
-        with self.subTest("Test other formats"):
-            del self.mock_metadata._MultipleMetadata__groups
-            del self.file_media.__dict__["video_metadata"]  # clear cache
-            self.assertEqual(self.mock_metadata, self.file_media.video_metadata)
+    def _build(self, **kwargs):
+        from telegram_upload._media import MediaInfo
+        info = MediaInfo(**kwargs)
+        media = FileMedia("video.mkv")
+        media.__dict__["info"] = info  # bypass cached_property → probe()
+        return media
 
     def test_duration(self):
-        """Test the duration attribute."""
-        self.mock_metadata.has.return_value = True
-        self.mock_metadata.get.return_value.seconds = 123
-        self.assertEqual(Duration(123).seconds, self.file_media.duration.seconds)
-        self.mock_metadata.has.assert_called_once_with("duration")
-        self.mock_metadata.get.assert_called_once_with("duration")
+        media = self._build(duration=123)
+        self.assertEqual(123, media.duration.seconds)
 
-    @patch.object(FileMedia, "video_metadata")
-    def test_get_video_metadata(self, mock_video_metadata: MagicMock):
-        """Test the _get_video_metadata method."""
-        with self.subTest("Test with video metadata"):
-            self.assertEqual(mock_video_metadata.get.return_value, self.file_media._get_video_metadata("width"))
-            mock_video_metadata.get.assert_called_once_with("width")
-            mock_video_metadata.has.assert_called_once_with("width")
-        mock_video_metadata.reset_mock()
-        with self.subTest("Test without video metadata field"):
-            mock_video_metadata.has.return_value = False
-            self.assertIsNone(self.file_media._get_video_metadata("width"))
-            mock_video_metadata.get.assert_not_called()
-            mock_video_metadata.has.assert_called_once_with("width")
-        mock_video_metadata.reset_mock()
-        with self.subTest("Test without video metadata"):
-            mock_video_metadata.__bool__.return_value = False
-            mock_video_metadata.get.assert_not_called()
-            mock_video_metadata.has.assert_not_called()
+    def test_duration_missing(self):
+        media = self._build(duration=None)
+        self.assertIsNone(media.duration)
 
-    def test_metadata(self):
-        """Test the _get_metadata method."""
-        with self.subTest("Test with metadata"):
-            self.assertEqual(self.mock_metadata.get.return_value, self.file_media._get_metadata("title"))
-            self.mock_metadata.get.assert_called_once_with("title")
-            self.mock_metadata.has.assert_called_once_with("title")
-        self.mock_metadata.reset_mock()
-        with self.subTest("Test without metadata field"):
-            self.mock_metadata.has.return_value = False
-            self.assertIsNone(self.file_media._get_metadata("title"))
-            self.mock_metadata.get.assert_not_called()
-            self.mock_metadata.has.assert_called_once_with("title")
-        self.mock_metadata.reset_mock()
-        with self.subTest("Test without metadata"):
-            self.mock_metadata.__bool__.return_value = False
-            self.mock_metadata.get.assert_not_called()
-            self.mock_metadata.has.assert_not_called()
+    def test_width_height(self):
+        media = self._build(width=1920, height=1080)
+        self.assertEqual(1920, media.width)
+        self.assertEqual(1080, media.height)
 
-    @patch.object(FileMedia, "_get_video_metadata")
-    def test_width(self, mock_get_video_metadata: MagicMock):
-        """Test the width attribute."""
-        self.assertEqual(mock_get_video_metadata.return_value, self.file_media.width)
-        mock_get_video_metadata.assert_called_once_with("width")
+    def test_tags(self):
+        media = self._build(title="t", artist="a", album="al", producer="p")
+        self.assertEqual("t", media.title)
+        self.assertEqual("a", media.artist)
+        self.assertEqual("al", media.album)
+        self.assertEqual("p", media.producer)
 
-    @patch.object(FileMedia, "_get_video_metadata")
-    def test_height(self, mock_get_video_metadata: MagicMock):
-        """Test the height attribute."""
-        self.assertEqual(mock_get_video_metadata.return_value, self.file_media.height)
-        mock_get_video_metadata.assert_called_once_with("height")
-
-    @patch.object(FileMedia, "_get_metadata")
-    def test_title(self, mock_get_metadata: MagicMock):
-        """Test the title attribute."""
-        self.assertEqual(mock_get_metadata.return_value, self.file_media.title)
-        mock_get_metadata.assert_called_once_with("title")
-
-    @patch.object(FileMedia, "_get_metadata")
-    def test_artist(self, mock_get_metadata: MagicMock):
-        """Test the artist attribute."""
-        self.assertEqual(mock_get_metadata.return_value, self.file_media.artist)
-        mock_get_metadata.assert_called_once_with("artist")
-
-    @patch.object(FileMedia, "_get_metadata")
-    def test_album(self, mock_get_metadata: MagicMock):
-        """Test the album attribute."""
-        self.assertEqual(mock_get_metadata.return_value, self.file_media.album)
-        mock_get_metadata.assert_called_once_with("album")
-
-    @patch.object(FileMedia, "_get_metadata")
-    def test_producer(self, mock_get_metadata: MagicMock):
-        """Test the producer attribute."""
-        self.assertEqual(mock_get_metadata.return_value, self.file_media.producer)
-        mock_get_metadata.assert_called_once_with("producer")
+    def test_tags_missing(self):
+        media = self._build()
+        self.assertIsNone(media.title)
+        self.assertIsNone(media.artist)
+        self.assertIsNone(media.album)
+        self.assertIsNone(media.producer)
 
 
 class TestFilePath(unittest.TestCase):
@@ -364,11 +300,13 @@ class TestFilePath(unittest.TestCase):
         file_path = FilePath("file.tar.gz")
         self.assertEqual(".tar.gz", file_path.suffixes)
 
+    @unittest.skipIf(os.name == "nt", "POSIX path semantics")
     def test_absolute(self):
         """Test the absolute attribute."""
         file_path = FilePath("/home/user/file.tar.gz")
         self.assertEqual("/home/user/file.tar.gz", str(file_path.absolute))
 
+    @unittest.skipIf(os.name == "nt", "POSIX path semantics")
     @patch("telegram_upload.caption_formatter.Path.cwd")
     def test_relative(self, mock_cwd: MagicMock):
         """Test the relative attribute."""
@@ -412,4 +350,5 @@ class TestTestCaptionFormat(unittest.TestCase):
         runner = CliRunner()
         result = runner.invoke(test_caption_format, [__file__, "{file.stem}"])
         self.assertEqual(0, result.exit_code)
-        mock_print.assert_called_once_with(__file__.split("/")[-1].split(".")[0])
+        expected = os.path.basename(__file__).rsplit(".", 1)[0]
+        mock_print.assert_called_once_with(expected)
